@@ -29,7 +29,7 @@ export const mockEntreprises = [
     statut: 'actif',
     date_creation: '2024-01-15T10:00:00Z',
     date_expiration: '2025-12-31',
-    logo: require('../assets/images/logos/pharma-sosa.png'),
+    logo: require('../../assets/images/logos/pharma-sosa.jpg'),
   },
   {
     id: 2,
@@ -41,7 +41,7 @@ export const mockEntreprises = [
     statut: 'actif',
     date_creation: '2024-03-20T09:00:00Z',
     date_expiration: '2025-12-31',
-    logo: require('../assets/images/logos/pharma-sante.png'),
+    logo: require('../../assets/images/logos/pharma-sante.png'),
   },
   {
     id: 3,
@@ -53,7 +53,7 @@ export const mockEntreprises = [
     statut: 'actif',
     date_creation: '2024-02-10T11:30:00Z',
     date_expiration: '2025-12-31',
-    logo: require('../assets/images/logos/pharma-nouvellevie.png'),
+    logo: require('../../assets/images/logos/pharma-nouvellevie.png'),
   },
   
   // RESTAURANTS (3 entreprises différentes)
@@ -67,7 +67,7 @@ export const mockEntreprises = [
     statut: 'actif',
     date_creation: '2024-01-05T08:00:00Z',
     date_expiration: '2025-12-31',
-    logo: require('../assets/images/logos/resto-timouche.png'),
+    logo: require('../../assets/images/logos/resto-timouche.png'),
   },
   {
     id: 5,
@@ -79,7 +79,7 @@ export const mockEntreprises = [
     statut: 'actif',
     date_creation: '2024-02-25T10:00:00Z',
     date_expiration: '2025-12-31',
-    logo: require('../assets/images/logos/resto-saveurs.png'),
+    logo: require('../../assets/images/logos/resto-saveurs.png'),
   },
   {
     id: 6,
@@ -91,7 +91,7 @@ export const mockEntreprises = [
     statut: 'actif',
     date_creation: '2024-04-12T09:30:00Z',
     date_expiration: '2025-12-31',
-    logo: require('../assets/images/logos/resto-chezmarie.png'),
+    logo: require('../../assets/images/logos/resto-chezmarie.png'),
   },
   
   // DÉPÔTS (2 entreprises)
@@ -105,7 +105,7 @@ export const mockEntreprises = [
     statut: 'actif',
     date_creation: '2024-01-20T07:00:00Z',
     date_expiration: '2025-12-31',
-    logo: require('../assets/images/logos/depot-lamour.png'),
+    logo: require('../../assets/images/logos/depot-lamour.png'),
   },
   {
     id: 8,
@@ -117,7 +117,7 @@ export const mockEntreprises = [
     statut: 'actif',
     date_creation: '2024-03-15T08:30:00Z',
     date_expiration: '2025-12-31',
-    logo: require('../assets/images/logos/depot-bonmarche.png'),
+    logo: require('../../assets/images/logos/depot-bonmarche.png'),
   },
   
   // SHOPS (2 entreprises)
@@ -131,7 +131,7 @@ export const mockEntreprises = [
     statut: 'actif',
     date_creation: '2024-02-28T10:00:00Z',
     date_expiration: '2025-12-31',
-    logo: require('../assets/images/logos/shop-moderne.png'),
+    logo: require('../../assets/images/logos/shop-moderne.png'),
   },
   {
     id: 10,
@@ -143,7 +143,7 @@ export const mockEntreprises = [
     statut: 'actif',
     date_creation: '2024-04-05T11:00:00Z',
     date_expiration: '2025-12-31',
-    logo: require('../assets/images/logos/shop-fashion.png'),
+    logo: require('../../assets/images/logos/shop-fashion.png'),
   },
 ];
 

@@ -1,177 +1,115 @@
 /**
  * SGPME - Main Navigator
  * 
- * Bottom tabs navigation pour l'application vendeur
- * Les icônes s'adaptent automatiquement selon le thème (module business)
+ * Navigation principale avec Bottom Tabs + Stack pour Checkout
  * 
- * Tabs :
- * - Products : Liste des produits
- * - Cart : Panier
- * - History : Historique des ventes
- * - Profile : Profil vendeur
+ * Structure:
+ * - MainTabs (Products, Cart, History, Profile)
+ * - Stack (Checkout, Success) en modal
  */
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { View, Text, StyleSheet } from 'react-native';
-
-// Hooks (optionnels pour l'instant)
-// import { useTheme } from '../theme';
 import { useSelector } from 'react-redux';
+import { useTheme } from '../theme/ThemeProvider';
 
-// Sélecteur Redux (avec fallback)
-const selectCartItemsCount = (state) => {
-  if (state?.cart?.items) {
-    return state.cart.items.reduce((total, item) => total + item.quantite, 0);
-  }
-  return 0;
-};
+// Screens
+import {
+  ProductsScreen,
+  CartScreen,
+  CheckoutScreen,
+  SuccessScreen,
+} from '../screens';
 
-// Screens (à créer)
-// import ProductListScreen from '../screens/Products/ProductListScreen';
-// import CartScreen from '../screens/Cart/CartScreen';
-// import HistoryScreen from '../screens/History/HistoryScreen';
-// import ProfileScreen from '../screens/Profile/ProfileScreen';
-
-// Placeholders temporaires
-const ProductsScreenPlaceholder = () => (
-  <View style={styles.placeholder}>
-    <Text style={styles.placeholderText}>ProductListScreen</Text>
-    <Text style={styles.placeholderSubtext}>src/screens/Products/ProductListScreen.js</Text>
-  </View>
-);
-
-const CartScreenPlaceholder = () => (
-  <View style={styles.placeholder}>
-    <Text style={styles.placeholderText}>CartScreen</Text>
-    <Text style={styles.placeholderSubtext}>src/screens/Cart/CartScreen.js</Text>
-  </View>
-);
+// Placeholders pour History et Profile (Phase 2)
+import { View, Text, StyleSheet } from 'react-native';
 
 const HistoryScreenPlaceholder = () => (
   <View style={styles.placeholder}>
     <Text style={styles.placeholderText}>HistoryScreen</Text>
-    <Text style={styles.placeholderSubtext}>src/screens/History/HistoryScreen.js</Text>
+    <Text style={styles.placeholderSubtext}>À créer en Phase 2</Text>
   </View>
 );
 
 const ProfileScreenPlaceholder = () => (
   <View style={styles.placeholder}>
     <Text style={styles.placeholderText}>ProfileScreen</Text>
-    <Text style={styles.placeholderSubtext}>src/screens/Profile/ProfileScreen.js</Text>
+    <Text style={styles.placeholderSubtext}>À créer en Phase 2</Text>
   </View>
 );
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 // ============================================================================
-// 🎨 THÈME PAR DÉFAUT (utilisé si ThemeProvider n'existe pas encore)
+// 📱 BOTTOM TABS
 // ============================================================================
 
-const DEFAULT_THEME = {
-  colors: {
-    primary: '#007AFF',
-    background: '#FFFFFF',
-    border: '#E5E5E5',
-    textInverse: '#FFFFFF',
-    textSecondary: '#737373',
-  },
-  labels: {
-    products: 'Produits',
-  },
-  icons: {
-    products: 'store',
-    cart: 'cart',
-  },
-};
-
-// ============================================================================
-// 📱 MAIN NAVIGATOR
-// ============================================================================
-
-export default function MainNavigator() {
-  // Récupère le thème (avec fallback si pas encore implémenté)
-  // const theme = useTheme ? useTheme() : DEFAULT_THEME;
-  const theme = DEFAULT_THEME; // Temporaire
-  
-  const cartItemsCount = useSelector(selectCartItemsCount);
+function MainTabs() {
+  const theme = useTheme();
+  const cartItemsCount = useSelector(state =>
+    state.cart.items.reduce((sum, item) => sum + item.quantite, 0)
+  );
 
   return (
     <Tab.Navigator
       screenOptions={{
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: theme.colors.primary,
-        },
-        headerTintColor: theme.colors.textInverse,
-        headerTitleStyle: {
-          fontWeight: '600',
-          fontSize: 18,
-        },
+        headerShown: false, // Headers gérés dans les screens
         tabBarStyle: {
-          backgroundColor: theme.colors.background,
-          borderTopColor: theme.colors.border,
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E5E5E5',
           borderTopWidth: 1,
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
         },
         tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.textSecondary,
+        tabBarInactiveTintColor: '#737373',
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
         },
       }}
     >
-      {/* ================================================================== */}
-      {/* PRODUCTS TAB */}
-      {/* ================================================================== */}
+      {/* Products Tab */}
       <Tab.Screen
-        name="Products"
-        component={ProductsScreenPlaceholder}
-        // Après création : component={ProductListScreen}
+        name="ProductsTab"
+        component={ProductsScreen}
         options={{
-          title: theme.labels.products, // "Médicaments" | "Menu" | "Articles" | "Produits"
+          title: theme.labels.products,
           tabBarLabel: theme.labels.products,
           tabBarIcon: ({ color, size }) => (
-            <Icon name={theme.icons.products} size={size} color={color} />
+            <Icon name="store" size={size} color={color} />
           ),
         }}
       />
 
-      {/* ================================================================== */}
-      {/* CART TAB */}
-      {/* ================================================================== */}
+      {/* Cart Tab */}
       <Tab.Screen
-        name="Cart"
-        component={CartScreenPlaceholder}
-        // Après création : component={CartScreen}
+        name="CartTab"
+        component={CartScreen}
         options={{
           title: 'Panier',
           tabBarLabel: 'Panier',
           tabBarIcon: ({ color, size }) => (
-            <Icon name={theme.icons.cart} size={size} color={color} />
+            <Icon name="cart" size={size} color={color} />
           ),
-          // Badge avec nombre d'articles
           tabBarBadge: cartItemsCount > 0 ? cartItemsCount : undefined,
           tabBarBadgeStyle: {
             backgroundColor: theme.colors.primary,
-            color: theme.colors.textInverse,
+            color: '#FFFFFF',
             fontSize: 10,
             fontWeight: 'bold',
           },
         }}
       />
 
-      {/* ================================================================== */}
-      {/* HISTORY TAB */}
-      {/* ================================================================== */}
+      {/* History Tab */}
       <Tab.Screen
-        name="History"
+        name="HistoryTab"
         component={HistoryScreenPlaceholder}
-        // Après création : component={HistoryScreen}
         options={{
           title: 'Historique',
           tabBarLabel: 'Historique',
@@ -181,13 +119,10 @@ export default function MainNavigator() {
         }}
       />
 
-      {/* ================================================================== */}
-      {/* PROFILE TAB */}
-      {/* ================================================================== */}
+      {/* Profile Tab */}
       <Tab.Screen
-        name="Profile"
+        name="ProfileTab"
         component={ProfileScreenPlaceholder}
-        // Après création : component={ProfileScreen}
         options={{
           title: 'Profil',
           tabBarLabel: 'Profil',
@@ -197,6 +132,47 @@ export default function MainNavigator() {
         }}
       />
     </Tab.Navigator>
+  );
+}
+
+// ============================================================================
+// 🧭 MAIN STACK NAVIGATOR (Tabs + Checkout modals)
+// ============================================================================
+
+export default function MainNavigator() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      {/* Main Tabs */}
+      <Stack.Screen
+        name="MainTabs"
+        component={MainTabs}
+      />
+
+      {/* Checkout Modal */}
+      <Stack.Screen
+        name="Checkout"
+        component={CheckoutScreen}
+        options={{
+          presentation: 'card',
+          animation: 'slide_from_right',
+        }}
+      />
+
+      {/* Success Modal */}
+      <Stack.Screen
+        name="Success"
+        component={SuccessScreen}
+        options={{
+          presentation: 'card',
+          animation: 'slide_from_bottom',
+          gestureEnabled: false, // Empêcher le swipe back
+        }}
+      />
+    </Stack.Navigator>
   );
 }
 

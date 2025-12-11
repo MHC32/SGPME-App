@@ -27,13 +27,29 @@ export default function AppNavigator() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const loading = useSelector(selectAuthLoading);
 
+  console.log('🔵 [AppNavigator] RENDER');
+  console.log('   isAuthenticated:', isAuthenticated);
+  console.log('   loading:', loading);
+
   // Vérifie si l'utilisateur est déjà connecté au démarrage
+  // IMPORTANT : Ne vérifie qu'UNE SEULE FOIS et seulement si pas déjà authentifié
   useEffect(() => {
-    dispatch(checkAuth());
-  }, [dispatch]);
+    console.log('🟢 [AppNavigator] useEffect TRIGGER');
+    console.log('   isAuthenticated:', isAuthenticated);
+    console.log('   loading:', loading);
+    
+    // Ne check que si on n'est pas déjà authentifié
+    if (!isAuthenticated && !loading) {
+      console.log('✅ [AppNavigator] Calling checkAuth()...');
+      dispatch(checkAuth());
+    } else {
+      console.log('⏭️ [AppNavigator] Skipping checkAuth (already auth or loading)');
+    }
+  }, []); // Dépendances vides = exécute qu'une seule fois au mount
 
   // Affiche un loading pendant la vérification initiale
   if (loading) {
+    console.log('⏳ [AppNavigator] Showing loading screen...');
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -41,12 +57,15 @@ export default function AppNavigator() {
     );
   }
 
+  console.log('🧭 [AppNavigator] Navigating to:', isAuthenticated ? 'MainNavigator' : 'AuthNavigator');
+
   return (
     <NavigationContainer>
       {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );
 }
+
 
 // ============================================================================
 // 🎨 STYLES

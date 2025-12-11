@@ -10,8 +10,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../../utils';
 
 // Pour l'instant, on utilise les données mock
-import { USERS } from '../../data/users';
-import { ENTREPRISES } from '../../data/entreprises';
+import { mockUsers as USERS } from '../../data/mock/users';
+import { mockEntreprises as ENTREPRISES } from '../../data/mock/entreprises';
 
 // ============================================================================
 // 🔐 ASYNC THUNKS (Actions asynchrones)
@@ -24,47 +24,65 @@ import { ENTREPRISES } from '../../data/entreprises';
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
+    console.log('🔵 [authSlice] login() START');
+    console.log('   credentials:', credentials);
+    
     try {
       const { username, password } = credentials;
-
-      // TODO: Remplacer par appel API réel
-      // const response = await fetch('API_URL/auth/login/', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ username, password }),
-      // });
-      // const data = await response.json();
+      console.log('   username:', username);
 
       // Simulation avec données mock
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simule latence réseau
+      console.log('⏳ [authSlice] Simulating network latency...');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Cherche l'utilisateur
+      console.log('🔍 [authSlice] Searching user in USERS...');
+      console.log('   USERS available:', USERS ? USERS.length : 'UNDEFINED');
+      
       const user = USERS.find(
         (u) => u.username === username && u.password === password
       );
 
       if (!user) {
+        console.log('❌ [authSlice] User not found or password incorrect');
         return rejectWithValue('Nom d\'utilisateur ou mot de passe incorrect');
       }
+      
+      console.log('✅ [authSlice] User found:', user.username);
 
       // Vérifie que c'est un vendeur (seul rôle autorisé sur mobile)
+      console.log('🔐 [authSlice] Checking role:', user.role);
       if (user.role !== 'vendeur') {
+        console.log('❌ [authSlice] Role not allowed:', user.role);
         return rejectWithValue('Accès non autorisé. Réservé aux vendeurs.');
       }
+      
+      console.log('✅ [authSlice] Role OK: vendeur');
 
       // Récupère l'entreprise
+      console.log('🏢 [authSlice] Fetching entreprise...');
+      console.log('   ENTREPRISES available:', ENTREPRISES ? ENTREPRISES.length : 'UNDEFINED');
       const entreprise = ENTREPRISES.find((e) => e.id === user.entreprise);
 
       if (!entreprise) {
+        console.log('❌ [authSlice] Entreprise not found:', user.entreprise);
         return rejectWithValue('Entreprise introuvable');
       }
+      
+      console.log('✅ [authSlice] Entreprise found:', entreprise.nom);
+      console.log('   module_actif:', entreprise.module_actif);
 
       // Vérifie que l'entreprise est active
+      console.log('🔐 [authSlice] Checking entreprise status:', entreprise.statut);
       if (entreprise.statut !== 'actif') {
+        console.log('❌ [authSlice] Entreprise not active');
         return rejectWithValue('Entreprise suspendue ou expirée');
       }
+      
+      console.log('✅ [authSlice] Entreprise status OK');
 
       // Prépare les données à retourner
+      console.log('📦 [authSlice] Preparing userData...');
       const userData = {
         id: user.id,
         username: user.username,
@@ -87,13 +105,18 @@ export const login = createAsyncThunk(
 
       // Simule un token (en production, vient de l'API)
       const token = `mock_token_${user.id}_${Date.now()}`;
+      console.log('🔑 [authSlice] Token generated:', token);
 
       // Sauvegarde dans AsyncStorage
+      console.log('💾 [authSlice] Saving to AsyncStorage...');
       await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
       await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
+      console.log('✅ [authSlice] Saved to AsyncStorage');
 
+      console.log('🎉 [authSlice] login() SUCCESS - Returning data');
       return { user: userData, token };
     } catch (error) {
+      console.log('❌ [authSlice] login() CATCH ERROR:', error);
       return rejectWithValue(error.message || 'Erreur de connexion');
     }
   }
@@ -105,17 +128,18 @@ export const login = createAsyncThunk(
 export const logout = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
+    console.log('🔵 [authSlice] logout() START');
     try {
-      // TODO: Appel API pour invalider le token
-      // await fetch('API_URL/auth/logout/', { ... });
-
       // Supprime les données stockées
+      console.log('🗑️ [authSlice] Clearing AsyncStorage...');
       await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
       await AsyncStorage.removeItem(STORAGE_KEYS.USER_DATA);
-      await AsyncStorage.removeItem(STORAGE_KEYS.CART); // Reset panier aussi
+      await AsyncStorage.removeItem(STORAGE_KEYS.CART);
+      console.log('✅ [authSlice] logout() SUCCESS');
 
       return null;
     } catch (error) {
+      console.log('❌ [authSlice] logout() ERROR:', error);
       return rejectWithValue(error.message || 'Erreur de déconnexion');
     }
   }
@@ -127,23 +151,28 @@ export const logout = createAsyncThunk(
 export const checkAuth = createAsyncThunk(
   'auth/checkAuth',
   async (_, { rejectWithValue }) => {
+    console.log('🔵 [authSlice] checkAuth() START');
     try {
+      console.log('📖 [authSlice] Reading from AsyncStorage...');
       const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
       const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+      
+      console.log('   token:', token ? 'present' : 'null');
+      console.log('   userData:', userData ? 'present' : 'null');
 
       if (!token || !userData) {
+        console.log('❌ [authSlice] No auth data in storage');
         return rejectWithValue('Non authentifié');
       }
 
-      // TODO: Vérifier la validité du token auprès de l'API
-      // const response = await fetch('API_URL/auth/verify/', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-
       const user = JSON.parse(userData);
+      console.log('✅ [authSlice] checkAuth() SUCCESS');
+      console.log('   user:', user.username);
+      console.log('   module:', user.entreprise?.module_actif);
 
       return { user, token };
     } catch (error) {
+      console.log('❌ [authSlice] checkAuth() ERROR:', error);
       return rejectWithValue('Session expirée');
     }
   }
@@ -209,17 +238,28 @@ const authSlice = createSlice({
     // LOGIN
     // ========================================================================
     builder.addCase(login.pending, (state) => {
+      console.log('⏳ [authSlice REDUCER] login.pending');
       state.loading = true;
       state.error = null;
     });
     builder.addCase(login.fulfilled, (state, action) => {
+      console.log('✅ [authSlice REDUCER] login.fulfilled');
+      console.log('   Setting isAuthenticated = true');
+      console.log('   user:', action.payload.user.username);
+      console.log('   module:', action.payload.user.entreprise?.module_actif);
+      
       state.loading = false;
       state.isAuthenticated = true;
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.error = null;
+      
+      console.log('   STATE UPDATED: isAuthenticated =', state.isAuthenticated);
     });
     builder.addCase(login.rejected, (state, action) => {
+      console.log('❌ [authSlice REDUCER] login.rejected');
+      console.log('   error:', action.payload);
+      
       state.loading = false;
       state.isAuthenticated = false;
       state.user = null;
@@ -231,9 +271,11 @@ const authSlice = createSlice({
     // LOGOUT
     // ========================================================================
     builder.addCase(logout.pending, (state) => {
+      console.log('⏳ [authSlice REDUCER] logout.pending');
       state.loading = true;
     });
     builder.addCase(logout.fulfilled, (state) => {
+      console.log('✅ [authSlice REDUCER] logout.fulfilled');
       state.loading = false;
       state.isAuthenticated = false;
       state.user = null;
@@ -241,6 +283,7 @@ const authSlice = createSlice({
       state.error = null;
     });
     builder.addCase(logout.rejected, (state, action) => {
+      console.log('❌ [authSlice REDUCER] logout.rejected');
       state.loading = false;
       // On force la déconnexion même en cas d'erreur
       state.isAuthenticated = false;
@@ -253,21 +296,33 @@ const authSlice = createSlice({
     // CHECK AUTH
     // ========================================================================
     builder.addCase(checkAuth.pending, (state) => {
+      console.log('⏳ [authSlice REDUCER] checkAuth.pending');
       state.loading = true;
     });
     builder.addCase(checkAuth.fulfilled, (state, action) => {
+      console.log('✅ [authSlice REDUCER] checkAuth.fulfilled');
+      console.log('   Setting isAuthenticated = true');
+      console.log('   user:', action.payload.user.username);
+      
       state.loading = false;
       state.isAuthenticated = true;
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.error = null;
+      
+      console.log('   STATE UPDATED: isAuthenticated =', state.isAuthenticated);
     });
     builder.addCase(checkAuth.rejected, (state) => {
+      console.log('❌ [authSlice REDUCER] checkAuth.rejected');
+      console.log('   Setting isAuthenticated = false');
+      
       state.loading = false;
       state.isAuthenticated = false;
       state.user = null;
       state.token = null;
       state.error = null; // Pas d'erreur si juste non connecté
+      
+      console.log('   STATE UPDATED: isAuthenticated =', state.isAuthenticated);
     });
 
     // ========================================================================

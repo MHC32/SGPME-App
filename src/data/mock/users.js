@@ -36,7 +36,7 @@ export const mockUsers = [
     entreprise: 1,
     
     telephone: '+509 3456-7890',
-    avatar: require('../assets/images/avatars/avatar-f1.png'),
+    avatar: require('../../assets/images/avatars/avatar-f1.png'),
     
     is_active: true,
     date_creation: '2024-01-15T10:30:00Z',
@@ -54,7 +54,7 @@ export const mockUsers = [
     entreprise: 1,
     
     telephone: '+509 3712-4567',
-    avatar: require('../assets/images/avatars/avatar-m1.png'),
+    avatar: require('../../assets/images/avatars/avatar-m1.png'),
     
     is_active: true,
     date_creation: '2024-03-10T09:00:00Z',
@@ -72,7 +72,7 @@ export const mockUsers = [
     entreprise: 1,
     
     telephone: '+509 3823-5555',
-    avatar: require('../assets/images/avatars/avatar-m2.png'),
+    avatar: require('../../assets/images/avatars/avatar-m2.png'),
     
     is_active: true,
     date_creation: '2024-01-15T08:00:00Z',
@@ -94,7 +94,7 @@ export const mockUsers = [
     entreprise: 2,
     
     telephone: '+509 3823-5678',
-    avatar: require('../assets/images/avatars/avatar-f2.png'),
+    avatar: require('../../assets/images/avatars/avatar-f2.png'),
     
     is_active: true,
     date_creation: '2024-03-20T10:00:00Z',
@@ -112,7 +112,7 @@ export const mockUsers = [
     entreprise: 2,
     
     telephone: '+509 3934-6789',
-    avatar: require('../assets/images/avatars/avatar-m3.png'),
+    avatar: require('../../assets/images/avatars/avatar-m3.png'),
     
     is_active: true,
     date_creation: '2024-04-05T11:00:00Z',
@@ -134,7 +134,7 @@ export const mockUsers = [
     entreprise: 3,
     
     telephone: '+509 3845-7890',
-    avatar: require('../assets/images/avatars/avatar-f3.png'),
+    avatar: require('../../assets/images/avatars/avatar-f3.png'),
     
     is_active: true,
     date_creation: '2024-02-10T09:30:00Z',
@@ -156,7 +156,7 @@ export const mockUsers = [
     entreprise: 4,
     
     telephone: '+509 3956-8901',
-    avatar: require('../assets/images/avatars/avatar-m4.png'),
+    avatar: require('../../assets/images/avatars/avatar-m4.png'),
     
     is_active: true,
     date_creation: '2024-01-05T08:30:00Z',
@@ -174,7 +174,7 @@ export const mockUsers = [
     entreprise: 4,
     
     telephone: '+509 3067-9012',
-    avatar: require('../assets/images/avatars/avatar-f4.png'),
+    avatar: require('../../assets/images/avatars/avatar-f4.png'),
     
     is_active: true,
     date_creation: '2024-02-20T10:00:00Z',
@@ -196,7 +196,7 @@ export const mockUsers = [
     entreprise: 5,
     
     telephone: '+509 3178-0123',
-    avatar: require('../assets/images/avatars/avatar-m5.png'),
+    avatar: require('../../assets/images/avatars/avatar-m5.png'),
     
     is_active: true,
     date_creation: '2024-02-25T11:00:00Z',
@@ -214,7 +214,7 @@ export const mockUsers = [
     entreprise: 5,
     
     telephone: '+509 3289-1234',
-    avatar: require('../assets/images/avatars/avatar-f5.png'),
+    avatar: require('../../assets/images/avatars/avatar-f5.png'),
     
     is_active: true,
     date_creation: '2024-03-10T09:30:00Z',
@@ -236,7 +236,7 @@ export const mockUsers = [
     entreprise: 6,
     
     telephone: '+509 3390-2345',
-    avatar: require('../assets/images/avatars/avatar-f6.png'),
+    avatar: require('../../assets/images/avatars/avatar-f6.png'),
     
     is_active: true,
     date_creation: '2024-04-12T08:00:00Z',
@@ -254,7 +254,7 @@ export const mockUsers = [
     entreprise: 6,
     
     telephone: '+509 3401-3456',
-    avatar: require('../assets/images/avatars/avatar-m6.png'),
+    avatar: require('../../assets/images/avatars/avatar-m6.png'),
     
     is_active: true,
     date_creation: '2024-04-15T10:00:00Z',
@@ -276,7 +276,7 @@ export const mockUsers = [
     entreprise: 7,
     
     telephone: '+509 3512-4567',
-    avatar: require('../assets/images/avatars/avatar-m7.png'),
+    avatar: require('../../assets/images/avatars/avatar-m7.png'),
     
     is_active: true,
     date_creation: '2024-01-20T07:30:00Z',
@@ -294,7 +294,7 @@ export const mockUsers = [
     entreprise: 7,
     
     telephone: '+509 3623-5678',
-    avatar: require('../assets/images/avatars/avatar-f7.png'),
+    avatar: require('../../assets/images/avatars/avatar-f7.png'),
     
     is_active: true,
     date_creation: '2024-02-01T08:00:00Z',
@@ -312,7 +312,7 @@ export const mockUsers = [
     entreprise: 7,
     
     telephone: '+509 3734-6789',
-    avatar: require('../assets/images/avatars/avatar-m8.png'),
+    avatar: require('../../assets/images/avatars/avatar-m8.png'),
     
     is_active: true,
     date_creation: '2024-02-15T09:00:00Z',
@@ -334,7 +334,7 @@ export const mockUsers = [
     entreprise: 8,
     
     telephone: '+509 3845-7890',
-    avatar: require('../assets/images/avatars/avatar-m9.png'),
+    avatar: require('../../assets/images/avatars/avatar-m9.png'),
     
     is_active: true,
     date_creation: '2024-03-15T10:00:00Z',
@@ -352,7 +352,7 @@ export const mockUsers = [
     entreprise: 8,
     
     telephone: '+509 3956-8901',
-    avatar: require('../assets/images/avatars/avatar-f8.png'),
+    avatar: require('../../assets/images/avatars/avatar-f8.png'),
     
     is_active: true,
     date_creation: '2024-03-20T11:00:00Z',
@@ -374,7 +374,7 @@ export const mockUsers = [
     entreprise: 9,
     
     telephone: '+509 3067-9012',
-    avatar: require('../assets/images/avatars/avatar-m10.png'),
+    avatar: require('../../assets/images/avatars/avatar-m10.png'),
     
     is_active: true,
     date_creation: '2024-02-28T10:30:00Z',
@@ -392,7 +392,7 @@ export const mockUsers = [
     entreprise: 9,
     
     telephone: '+509 3178-0123',
-    avatar: require('../assets/images/avatars/avatar-f9.png'),
+    avatar: require('../../assets/images/avatars/avatar-f9.png'),
     
     is_active: true,
     date_creation: '2024-03-05T09:00:00Z',
@@ -414,7 +414,7 @@ export const mockUsers = [
     entreprise: 10,
     
     telephone: '+509 3289-1234',
-    avatar: require('../assets/images/avatars/avatar-m11.png'),
+    avatar: require('../../assets/images/avatars/avatar-m11.png'),
     
     is_active: true,
     date_creation: '2024-04-05T11:30:00Z',
@@ -432,7 +432,7 @@ export const mockUsers = [
     entreprise: 10,
     
     telephone: '+509 3390-2345',
-    avatar: require('../assets/images/avatars/avatar-f10.png'),
+    avatar: require('../../assets/images/avatars/avatar-f10.png'),
     
     is_active: true,
     date_creation: '2024-04-10T10:00:00Z',
