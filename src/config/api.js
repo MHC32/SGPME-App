@@ -6,7 +6,7 @@
 
 // ⚠️ IMPORTANT : Modifier selon ton environnement
 const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.1.117:8000'  // 🔧 MODIFIE AVEC TON IP LOCALE
+  ? 'http://192.168.0.174:8000'  // 🔧 MODIFIE AVEC TON IP LOCALE
   : 'https://api.sgpme.com';      // URL de production
 
 export const API_CONFIG = {
@@ -16,37 +16,39 @@ export const API_CONFIG = {
   // ============================================================================
   // ENDPOINTS
   // ============================================================================
+  // Note: Le préfixe /api/ est ajouté dans services/api.js (baseURL)
+  // Donc les endpoints ci-dessous ne contiennent pas /api/
   
   ENDPOINTS: {
     // ----- AUTH -----
-    LOGIN: '/api/auth/login/',
-    REFRESH: '/api/auth/refresh/',
-    REGISTER: '/api/auth/register/',
-    ME: '/api/users/me/',
-    CHANGE_PASSWORD: '/api/users/change_password/',
+    LOGIN: '/auth/login/',
+    REFRESH: '/auth/refresh/',
+    REGISTER: '/auth/register/',
+    ME: '/users/me/',
+    CHANGE_PASSWORD: '/users/change_password/',
     
     // ----- PRODUITS -----
-    PRODUITS_VENTE: '/api/inventory/produits/pour-vente/',
-    PRODUITS: '/api/inventory/produits/',
-    PRODUITS_DETAIL: (id) => `/api/inventory/produits/${id}/`,
-    PRODUITS_EN_RUPTURE: '/api/inventory/produits/en_rupture/',
-    PRODUITS_STOCK_FAIBLE: '/api/inventory/produits/stock_faible/',
+    PRODUITS_VENTE: '/inventory/produits/pour-vente/',
+    PRODUITS: '/inventory/produits/',
+    PRODUITS_DETAIL: (id) => `/inventory/produits/${id}/`,
+    PRODUITS_EN_RUPTURE: '/inventory/produits/en_rupture/',
+    PRODUITS_STOCK_FAIBLE: '/inventory/produits/stock_faible/',
     
     // ----- CATÉGORIES -----
-    CATEGORIES: '/api/inventory/categories/',
-    CATEGORIES_DETAIL: (id) => `/api/inventory/categories/${id}/`,
+    CATEGORIES: '/inventory/categories/',
+    CATEGORIES_DETAIL: (id) => `/inventory/categories/${id}/`,
     
     // ----- VENTES -----
-    VENTES: '/api/inventory/ventes/',
-    VENTES_DETAIL: (id) => `/api/inventory/ventes/${id}/`,
+    VENTES: '/inventory/ventes/',
+    VENTES_DETAIL: (id) => `/inventory/ventes/${id}/`,
     
     // ----- CLIENTS -----
-    CLIENTS: '/api/inventory/clients/',
-    CLIENTS_DETAIL: (id) => `/api/inventory/clients/${id}/`,
+    CLIENTS: '/inventory/clients/',
+    CLIENTS_DETAIL: (id) => `/inventory/clients/${id}/`,
     
     // ----- MOUVEMENTS STOCK -----
-    MOUVEMENTS_STOCK: '/api/inventory/mouvements-stock/',
-    MOUVEMENTS_STATS: '/api/inventory/mouvements-stock/stats/',
+    MOUVEMENTS_STOCK: '/inventory/mouvements-stock/',
+    MOUVEMENTS_STATS: '/inventory/mouvements-stock/stats/',
   },
 };
 

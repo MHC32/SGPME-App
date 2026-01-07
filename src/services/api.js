@@ -17,7 +17,7 @@ import { API_CONFIG } from '../config/api';
 // ============================================================================
 
 const api = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
+  baseURL: `${API_CONFIG.BASE_URL}/api`,  // ✅ Ajout de /api
   timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',

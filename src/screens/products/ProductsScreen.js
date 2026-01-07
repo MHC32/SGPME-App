@@ -1,148 +1,134 @@
 /**
- * SGPME - ProductsScreen
+ * SGPME - ProductsScreen (VERSION CORRIGÉE - SANS ERREUR HOOKS)
  * 
- * Écran principal liste produits pour vendeur/caissier
- * 
- * Features:
- * - Header avec badge panier
- * - Recherche produits
- * - Filtres par catégories
- * - Liste produits avec scroll infini
- * - Ajout au panier rapide
- * - État vide
- * - Loading
- * - Adapté au module actif
+ * Règles strictes :
+ * 1. TOUS les hooks en haut du composant
+ * 2. AUCUN hook dans une condition
+ * 3. AUCUN return avant tous les hooks
+ * 4. useEffect APRÈS tous les autres hooks
  */
 
 import React, { useState, useEffect } from 'react';
 import {
   View,
+  Text,
   FlatList,
   StyleSheet,
-  TouchableOpacity,
+  RefreshControl,
   Image,
-  Text,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../theme/ThemeProvider';
-import {
-  ThemedHeader,
-  ThemedSearchBar,
-  ThemedCategoryFilter,
-  ThemedCard,
-  ThemedPriceDisplay,
-  ThemedStockBadge,
-  ThemedBadge,
-  ThemedEmptyState,
+
+// Services API
+import productsService from '../../services/products';
+import categoriesService from '../../services/categories';
+
+// Redux
+import { addToCart, selectIsInCart } from '../../redux/slices/cartSlice';
+import { selectUser } from '../../redux/slices/authSlice';
+import { showSuccess, showError } from '../../redux/slices/uiSlice';
+
+// Components
+import { 
+  ThemedCard, 
+  ThemedButton, 
   ThemedLoading,
   ThemedToast,
 } from '../../components/themed';
 import { UI_COLORS, FONT_SIZES } from '../../constants';
-import { addToCart } from '../../redux/slices/cartSlice';
-// Import des données mock depuis le bon chemin
-import { mockProduits as MOCK_PRODUCTS } from '../../data/mock/products';
-import { mockCategories as MOCK_CATEGORIES } from '../../data/mock/categories';
-
-// ============================================================================
-// 🔍 LOGS DE DÉBOGAGE - VÉRIFICATION DES COMPOSANTS
-// ============================================================================
-console.log('🔵 [ProductsScreen] Vérification des imports...');
-console.log('   ThemedHeader:', typeof ThemedHeader, ThemedHeader);
-console.log('   ThemedSearchBar:', typeof ThemedSearchBar, ThemedSearchBar);
-console.log('   ThemedCategoryFilter:', typeof ThemedCategoryFilter, ThemedCategoryFilter);
-console.log('   ThemedCard:', typeof ThemedCard, ThemedCard);
-console.log('   ThemedPriceDisplay:', typeof ThemedPriceDisplay, ThemedPriceDisplay);
-console.log('   ThemedStockBadge:', typeof ThemedStockBadge, ThemedStockBadge);
-console.log('   ThemedBadge:', typeof ThemedBadge, ThemedBadge);
-console.log('   ThemedEmptyState:', typeof ThemedEmptyState, ThemedEmptyState);
-console.log('   ThemedLoading:', typeof ThemedLoading, ThemedLoading);
-console.log('   ThemedToast:', typeof ThemedToast, ThemedToast);
-console.log('   MOCK_PRODUCTS:', typeof MOCK_PRODUCTS, MOCK_PRODUCTS ? MOCK_PRODUCTS.length : 'undefined');
-console.log('   MOCK_CATEGORIES:', typeof MOCK_CATEGORIES, MOCK_CATEGORIES ? MOCK_CATEGORIES.length : 'undefined');
-console.log('✅ [ProductsScreen] Vérification terminée\n');
-// ============================================================================
 
 const ProductsScreen = ({ navigation }) => {
+  console.log('🔵 [ProductsScreen] RENDER START');
+  
+  // ========================================================================
+  // 🎣 TOUS LES HOOKS ICI - ORDRE FIXE - PAS DE CONDITION
+  // ========================================================================
+  
+  // Redux hooks
   const dispatch = useDispatch();
+  const user = useSelector(selectUser);
+  
+  // Theme hook
   const theme = useTheme();
   
-  // Récupérer l'ID de l'entreprise du user connecté (pas l'objet complet)
-  const userEntreprise = useSelector(state => state.auth.user?.entreprise?.id);
-  
-  const cartItemsCount = useSelector(state => 
-    state.cart.items.reduce((sum, item) => sum + item.quantite, 0)
-  );
-
-  const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  // State hooks (ordre fixe, toujours appelés)
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
-
-  // 🔍 LOG au montage du composant
-  console.log('🟢 [ProductsScreen] COMPONENT MOUNTED');
-  console.log('   userEntreprise:', userEntreprise);
-  console.log('   theme:', theme.module);
-
-  // Charger produits (simuler API)
-  useEffect(() => {
-    console.log('🟢 [ProductsScreen] useEffect triggered');
-    loadProducts();
-  }, []);
-
-  const loadProducts = async () => {
-    setLoading(true);
+  
+  console.log('   Hooks initialized');
+  console.log('   user:', user?.username);
+  console.log('   products count:', products.length);
+  console.log('   loading:', loading);
+  
+  // ========================================================================
+  // 🔄 FONCTIONS (PAS DE HOOKS ICI)
+  // ========================================================================
+  
+  const fetchProducts = async (showLoader = true) => {
+    console.log('🔵 [ProductsScreen] fetchProducts() START');
+    
+    if (showLoader) {
+      setLoading(true);
+    }
+    
+    setError(null);
+    
     try {
-      // Simuler appel API
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const filters = {};
       
-      // 🔍 LOG DEBUG
-      console.log('🔵 [ProductsScreen] loadProducts() START');
-      console.log('   userEntreprise (ID):', userEntreprise);
-      console.log('   Type:', typeof userEntreprise);
-      console.log('   MOCK_PRODUCTS total:', MOCK_PRODUCTS.length);
-      
-      // Filtrer produits selon l'entreprise du user connecté
-      const moduleProducts = MOCK_PRODUCTS.filter(
-        p => p.entreprise === userEntreprise
-      );
-      
-      console.log('   Produits filtrés:', moduleProducts.length);
-      if (moduleProducts.length > 0) {
-        console.log('   ✅ Produits trouvés:', moduleProducts.map(p => p.nom));
-      } else {
-        console.log('   ❌ AUCUN produit trouvé !');
-        console.log('   Exemple de produit dans MOCK:', MOCK_PRODUCTS[0]);
+      if (selectedCategory) {
+        filters.categorie = selectedCategory;
       }
       
-      setProducts(moduleProducts);
-    } catch (error) {
-      console.error('❌ [ProductsScreen] Erreur loadProducts:', error);
+      console.log('📡 [ProductsScreen] Calling productsService...');
+      const data = await productsService.getProduitsPourVente(filters);
+      
+      console.log('✅ [ProductsScreen] Products fetched:', data.length);
+      setProducts(data);
+      
+    } catch (err) {
+      console.log('❌ [ProductsScreen] fetchProducts() ERROR:', err);
+      setError(err.message || 'Erreur de chargement');
       setToast({
         visible: true,
-        message: 'Erreur lors du chargement des produits',
+        message: 'Impossible de charger les produits',
         type: 'error',
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
-
-  // Filtrer produits
-  const filteredProducts = products.filter(product => {
-    const matchSearch = product.nom
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  
+  const fetchCategories = async () => {
+    console.log('🔵 [ProductsScreen] fetchCategories() START');
     
-    const matchCategory =
-      selectedCategory === 'all' || product.categorie === selectedCategory;
-    
-    return matchSearch && matchCategory;
-  });
-
-  // Ajouter au panier
+    try {
+      const data = await categoriesService.getCategories();
+      console.log('✅ [ProductsScreen] Categories fetched:', data.length);
+      setCategories(data);
+    } catch (err) {
+      console.log('❌ [ProductsScreen] fetchCategories() ERROR:', err);
+      // Les catégories ne sont pas critiques
+    }
+  };
+  
+  const handleRefresh = () => {
+    console.log('🔄 [ProductsScreen] Refreshing...');
+    setRefreshing(true);
+    fetchProducts(false);
+  };
+  
   const handleAddToCart = (product) => {
+    console.log('🛒 [ProductsScreen] Adding to cart:', product.nom);
+    
     if (product.stock_actuel <= 0) {
       setToast({
         visible: true,
@@ -151,271 +137,350 @@ const ProductsScreen = ({ navigation }) => {
       });
       return;
     }
-
-    dispatch(addToCart({
-      produit_id: product.id,
-      nom: product.nom,
-      prix_unitaire: product.prix_vente,
-      quantite: 1,
-      stock_actuel: product.stock_actuel,
-      image: product.image,
-      code: product.code,
-    }));
-
+    
+    dispatch(addToCart(product));
     setToast({
       visible: true,
       message: `${product.nom} ajouté au panier`,
       type: 'success',
     });
   };
-
-  // Render produit card
-  const renderProduct = ({ item }) => (
-    <TouchableOpacity
-      style={styles.productWrapper}
-      onPress={() => handleAddToCart(item)}
-      activeOpacity={0.7}
-    >
-      <ThemedCard variant="outlined" padding="md">
+  
+  const handleCategorySelect = (categoryId) => {
+    console.log('📂 [ProductsScreen] Category selected:', categoryId);
+    setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
+  };
+  
+  // ========================================================================
+  // 🎯 EFFECTS (APRÈS TOUS LES AUTRES HOOKS)
+  // ========================================================================
+  
+  useEffect(() => {
+    console.log('🟢 [ProductsScreen] MOUNT - Fetching data...');
+    fetchCategories();
+    fetchProducts();
+    
+    return () => {
+      console.log('🔴 [ProductsScreen] UNMOUNT');
+    };
+  }, []);
+  
+  useEffect(() => {
+    if (!loading) {
+      console.log('🔄 [ProductsScreen] Filter changed, reloading...');
+      fetchProducts();
+    }
+  }, [selectedCategory]);
+  
+  // ========================================================================
+  // 🎨 PRODUCT ITEM COMPONENT (Séparé pour utiliser hooks)
+  // ========================================================================
+  
+  const ProductItem = ({ product, onPress, onAddToCart }) => {
+    // ✅ Hooks peuvent être appelés ici (dans un composant)
+    const isInCart = useSelector(selectIsInCart(product.id));
+    
+    return (
+      <ThemedCard
+        variant="default"
+        padding="md"
+        style={styles.productCard}
+        onPress={() => onPress(product)}
+      >
         {/* Image */}
-        <View style={styles.imageContainer}>
-          {item.image ? (
+        {product.image && (
+          <View style={styles.imageContainer}>
             <Image
-              source={{ uri: item.image }}
+              source={{ uri: product.image }}
               style={styles.productImage}
               resizeMode="cover"
             />
-          ) : (
-            <View
-              style={[
-                styles.imagePlaceholder,
-                { backgroundColor: theme.colors.primary + '20' },
-              ]}
-            >
-              <Text style={{ fontSize: 32 }}>
-                {theme.icons.products}
-              </Text>
-            </View>
-          )}
-
-          {/* Badges top */}
-          <View style={styles.topBadges}>
-            {/* Pas de badge nouveau/promo dans les données mock pour l'instant */}
           </View>
-        </View>
-
+        )}
+        
         {/* Info */}
         <View style={styles.productInfo}>
-          {/* Nom */}
           <Text style={styles.productName} numberOfLines={2}>
-            {item.nom}
+            {product.nom}
           </Text>
-
-          {/* Code */}
-          {item.code && (
-            <Text style={styles.productCode}>{item.code}</Text>
-          )}
-
-          {/* Prix */}
-          <ThemedPriceDisplay
-            price={item.prix_vente}
-            size="large"
-          />
-
-          {/* Stock */}
-          <ThemedStockBadge
-            stock={item.stock_actuel}
-            lowThreshold={10}
-            size="small"
-            style={styles.stockBadge}
-          />
-
-          {/* Bouton ajout */}
-          <TouchableOpacity
-            style={[
-              styles.addButton,
-              {
-                backgroundColor:
-                  item.stock_actuel > 0
-                    ? theme.colors.primary
-                    : UI_COLORS.backgroundTertiary,
-              },
-            ]}
-            onPress={() => handleAddToCart(item)}
-            disabled={item.stock_actuel <= 0}
-          >
+          
+          <Text style={styles.productCode}>
+            {product.code}
+          </Text>
+          
+          <View style={styles.priceRow}>
+            <Text style={[styles.productPrice, { color: theme.colors.primary }]}>
+              {product.prix_vente} HTG
+            </Text>
+            
             <Text
               style={[
-                styles.addButtonText,
-                {
-                  color:
-                    item.stock_actuel > 0 ? UI_COLORS.white : UI_COLORS.textLight,
-                },
+                styles.stockBadge,
+                product.stock_actuel > 0 
+                  ? styles.stockAvailable 
+                  : styles.stockUnavailable,
               ]}
             >
-              {item.stock_actuel > 0 ? '+ Ajouter' : 'Rupture'}
+              {product.stock_actuel > 0 
+                ? `Stock: ${product.stock_actuel}` 
+                : 'Rupture'}
             </Text>
-          </TouchableOpacity>
+          </View>
         </View>
+        
+        {/* Button */}
+        <ThemedButton
+          title={isInCart ? 'Dans le panier' : 'Ajouter'}
+          onPress={() => onAddToCart(product)}
+          variant={isInCart ? 'outline' : 'primary'}
+          size="sm"
+          disabled={product.stock_actuel <= 0}
+        />
       </ThemedCard>
-    </TouchableOpacity>
-  );
-
-  // Loading
-  if (loading) {
+    );
+  };
+  
+  // ========================================================================
+  // 🎨 RENDER HELPERS
+  // ========================================================================
+  
+  const renderCategory = ({ item: category }) => {
+    const isSelected = selectedCategory === category.id;
+    
+    return (
+      <ThemedButton
+        title={category.nom}
+        onPress={() => handleCategorySelect(category.id)}
+        variant={isSelected ? 'primary' : 'outline'}
+        size="sm"
+        style={styles.categoryButton}
+      />
+    );
+  };
+  
+  const renderProduct = ({ item: product }) => {
+    // ✅ Utilise le composant ProductItem
+    return (
+      <ProductItem
+        product={product}
+        // onPress={handleProductPress}
+        onAddToCart={handleAddToCart}
+      />
+    );
+  };
+  
+  // ========================================================================
+  // 🎯 CONDITIONAL RENDERS (APRÈS TOUS LES HOOKS)
+  // ========================================================================
+  
+  // Loading initial
+  if (loading && !refreshing) {
     return (
       <SafeAreaView style={styles.container}>
-        <ThemedHeader title={theme.labels.products} />
         <ThemedLoading message="Chargement des produits..." />
       </SafeAreaView>
     );
   }
-
+  
+  // Erreur critique
+  if (error && products.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <ThemedButton
+            title="Réessayer"
+            onPress={() => fetchProducts()}
+            style={styles.retryButton}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+  
+  // ========================================================================
+  // 🎯 RENDER NORMAL
+  // ========================================================================
+  
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <ThemedHeader
-        title={theme.labels.products}
-        showCart
-        onCart={() => navigation.navigate('CartTab')}
-      />
-
-      {/* Recherche */}
-      <View style={styles.searchContainer}>
-        <ThemedSearchBar
-          value={search}
-          onChangeText={setSearch}
-          onClear={() => setSearch('')}
-        />
-      </View>
-
-      {/* Filtres catégories */}
-      <ThemedCategoryFilter
-        categories={MOCK_CATEGORIES.filter(c => c.entreprise === userEntreprise)}
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-        showAll
-      />
-
-      {/* Liste produits */}
-      {filteredProducts.length === 0 ? (
-        <ThemedEmptyState
-          icon="🔍"
-          title={search ? 'Aucun résultat' : `Aucun ${theme.labels.products.toLowerCase()}`}
-          message={
-            search
-              ? 'Essayez d\'autres mots-clés'
-              : 'Les produits apparaîtront ici'
-          }
-          actionLabel={search ? 'Effacer la recherche' : undefined}
-          onAction={search ? () => setSearch('') : undefined}
-        />
-      ) : (
-        <FlatList
-          data={filteredProducts}
-          renderItem={renderProduct}
-          keyExtractor={item => item.id}
-          numColumns={2}
-          contentContainerStyle={styles.productsList}
-          showsVerticalScrollIndicator={false}
-        />
+      {/* Catégories */}
+      {categories.length > 0 && (
+        <View style={styles.categoriesContainer}>
+          <FlatList
+            horizontal
+            data={categories}
+            renderItem={renderCategory}
+            keyExtractor={(item) => item.id.toString()}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesList}
+          />
+        </View>
       )}
-
+      
+      {/* Produits */}
+      <FlatList
+        data={products}
+        renderItem={renderProduct}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        contentContainerStyle={styles.productsList}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[theme.colors.primary]}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>
+              {selectedCategory
+                ? 'Aucun produit dans cette catégorie'
+                : 'Aucun produit disponible'}
+            </Text>
+          </View>
+        }
+      />
+      
       {/* Toast */}
       <ThemedToast
         message={toast.message}
         type={toast.type}
         visible={toast.visible}
         onDismiss={() => setToast({ ...toast, visible: false })}
-        position="bottom"
-        duration={2000}
+        position="top"
       />
     </SafeAreaView>
   );
 };
+
+// ============================================================================
+// 🎨 STYLES
+// ============================================================================
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: UI_COLORS.background,
   },
-
-  searchContainer: {
-    paddingHorizontal: 16,
+  
+  // Categories
+  categoriesContainer: {
     paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: UI_COLORS.border,
+    backgroundColor: UI_COLORS.surface,
   },
-
+  
+  categoriesList: {
+    paddingHorizontal: 16,
+  },
+  
+  categoryButton: {
+    marginRight: 8,
+  },
+  
+  // Products
   productsList: {
-    padding: 12,
+    padding: 16,
   },
-
-  productWrapper: {
+  
+  productCard: {
     flex: 1,
-    maxWidth: '50%',
-    padding: 4,
+    margin: 8,
+    maxWidth: '47%',
   },
-
-  // Product card
+  
   imageContainer: {
     width: '100%',
-    aspectRatio: 1,
+    height: 120,
+    backgroundColor: UI_COLORS.border,
     borderRadius: 8,
     overflow: 'hidden',
     marginBottom: 12,
-    position: 'relative',
   },
-
+  
   productImage: {
     width: '100%',
     height: '100%',
   },
-
-  imagePlaceholder: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  topBadges: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    gap: 4,
-  },
-
+  
   productInfo: {
-    gap: 8,
+    marginBottom: 12,
   },
-
+  
   productName: {
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
     color: UI_COLORS.text,
-    minHeight: 40,
+    marginBottom: 4,
   },
-
+  
   productCode: {
     fontSize: FONT_SIZES.xs,
     color: UI_COLORS.textLight,
-    fontFamily: 'monospace',
+    marginBottom: 8,
   },
-
+  
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  
+  productPrice: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '700',
+  },
+  
   stockBadge: {
-    alignSelf: 'flex-start',
+    fontSize: FONT_SIZES.xs,
+    fontWeight: '600',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
   },
-
-  addButton: {
-    height: 40,
-    borderRadius: 8,
+  
+  stockAvailable: {
+    backgroundColor: '#E8F5E9',
+    color: '#2E7D32',
+  },
+  
+  stockUnavailable: {
+    backgroundColor: '#FFEBEE',
+    color: '#C62828',
+  },
+  
+  // Empty
+  emptyContainer: {
+    padding: 60,
+    alignItems: 'center',
+  },
+  
+  emptyText: {
+    fontSize: FONT_SIZES.md,
+    color: UI_COLORS.textLight,
+    textAlign: 'center',
+  },
+  
+  // Error
+  errorContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 4,
+    padding: 24,
   },
-
-  addButtonText: {
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '700',
+  
+  errorText: {
+    fontSize: FONT_SIZES.md,
+    color: UI_COLORS.error,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  
+  retryButton: {
+    minWidth: 150,
   },
 });
 
