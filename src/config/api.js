@@ -6,7 +6,7 @@
 
 // ⚠️ IMPORTANT : Modifier selon ton environnement
 const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.0.174:8000'  // 🔧 MODIFIE AVEC TON IP LOCALE
+  ? 'http://192.168.1.117:8000'  // 🔧 MODIFIE AVEC TON IP LOCALE
   : 'https://api.sgpme.com';      // URL de production
 
 export const API_CONFIG = {

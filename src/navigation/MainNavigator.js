@@ -1,202 +1,91 @@
 /**
- * SGPME - Main Navigator
+ * MAIN NAVIGATOR (EXEMPLE)
  * 
- * Navigation principale avec Bottom Tabs + Stack pour Checkout
- * 
- * Structure:
- * - MainTabs (Products, Cart, History, Profile)
- * - Stack (Checkout, Success) en modal
+ * Navigator principal qui switch entre les modules
+ * selon le module_actif de l'entreprise
  */
 
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { View, Text, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useTheme } from '../theme/ThemeProvider';
 
-// Screens
-import {
-  ProductsScreen,
-  CartScreen,
-  CheckoutScreen,
-  SuccessScreen,
-} from '../screens';
+// Module Navigators
+// import ShopNavigator from './ShopNavigator';
+// import RestaurantNavigator from './RestaurantNavigator';
+// import PharmacieNavigator from './PharmacieNavigator';
+import DepotNavigator from './DepotNavigator';
 
-// Placeholders pour History et Profile (Phase 2)
-import { View, Text, StyleSheet } from 'react-native';
+const MainNavigator = () => {
+  const { theme } = useTheme();
+  const { user } = useSelector(state => state.auth);
 
-const HistoryScreenPlaceholder = () => (
-  <View style={styles.placeholder}>
-    <Text style={styles.placeholderText}>HistoryScreen</Text>
-    <Text style={styles.placeholderSubtext}>À créer en Phase 2</Text>
-  </View>
-);
+  // Récupérer le module actif
+  const moduleActif = user?.entreprise?.module_actif;
 
-const ProfileScreenPlaceholder = () => (
-  <View style={styles.placeholder}>
-    <Text style={styles.placeholderText}>ProfileScreen</Text>
-    <Text style={styles.placeholderSubtext}>À créer en Phase 2</Text>
-  </View>
-);
+  // Si pas de module actif, afficher erreur
+  if (!moduleActif) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorIcon}>⚠️</Text>
+        <Text style={styles.errorText}>Aucun module actif</Text>
+        <Text style={styles.errorSubtext}>
+          Veuillez contacter l'administrateur
+        </Text>
+      </View>
+    );
+  }
 
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
+  // Switch selon le module
+  switch (moduleActif) {
+    // case 'shop':
+    //   return <ShopNavigator />;
 
-// ============================================================================
-// 📱 BOTTOM TABS
-// ============================================================================
+    // case 'restaurant':
+    //   return <RestaurantNavigator />;
 
-function MainTabs() {
-  const theme = useTheme();
-  const cartItemsCount = useSelector(state =>
-    state.cart.items.reduce((sum, item) => sum + item.quantite, 0)
-  );
+    // case 'pharmacie':
+    //   return <PharmacieNavigator />;
 
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false, // Headers gérés dans les screens
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E5E5E5',
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: '#737373',
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
-        },
-      }}
-    >
-      {/* Products Tab */}
-      <Tab.Screen
-        name="ProductsTab"
-        component={ProductsScreen}
-        options={{
-          title: theme.labels.products,
-          tabBarLabel: theme.labels.products,
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="store" size={size} color={color} />
-          ),
-        }}
-      />
+    case 'depot':
+      return <DepotNavigator />;
 
-      {/* Cart Tab */}
-      <Tab.Screen
-        name="CartTab"
-        component={CartScreen}
-        options={{
-          title: 'Panier',
-          tabBarLabel: 'Panier',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="cart" size={size} color={color} />
-          ),
-          tabBarBadge: cartItemsCount > 0 ? cartItemsCount : undefined,
-          tabBarBadgeStyle: {
-            backgroundColor: theme.colors.primary,
-            color: '#FFFFFF',
-            fontSize: 10,
-            fontWeight: 'bold',
-          },
-        }}
-      />
-
-      {/* History Tab */}
-      <Tab.Screen
-        name="HistoryTab"
-        component={HistoryScreenPlaceholder}
-        options={{
-          title: 'Historique',
-          tabBarLabel: 'Historique',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="history" size={size} color={color} />
-          ),
-        }}
-      />
-
-      {/* Profile Tab */}
-      <Tab.Screen
-        name="ProfileTab"
-        component={ProfileScreenPlaceholder}
-        options={{
-          title: 'Profil',
-          tabBarLabel: 'Profil',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="account" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-}
-
-// ============================================================================
-// 🧭 MAIN STACK NAVIGATOR (Tabs + Checkout modals)
-// ============================================================================
-
-export default function MainNavigator() {
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      {/* Main Tabs */}
-      <Stack.Screen
-        name="MainTabs"
-        component={MainTabs}
-      />
-
-      {/* Checkout Modal */}
-      <Stack.Screen
-        name="Checkout"
-        component={CheckoutScreen}
-        options={{
-          presentation: 'card',
-          animation: 'slide_from_right',
-        }}
-      />
-
-      {/* Success Modal */}
-      <Stack.Screen
-        name="Success"
-        component={SuccessScreen}
-        options={{
-          presentation: 'card',
-          animation: 'slide_from_bottom',
-          gestureEnabled: false, // Empêcher le swipe back
-        }}
-      />
-    </Stack.Navigator>
-  );
-}
-
-// ============================================================================
-// 🎨 STYLES (Placeholders)
-// ============================================================================
+    default:
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorIcon}>❌</Text>
+          <Text style={styles.errorText}>Module inconnu</Text>
+          <Text style={styles.errorSubtext}>
+            Module "{moduleActif}" non supporté
+          </Text>
+        </View>
+      );
+  }
+};
 
 const styles = StyleSheet.create({
-  placeholder: {
+  errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#f5f5f5',
+    padding: 20
   },
-  placeholderText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 8,
+  errorIcon: {
+    fontSize: 64,
+    marginBottom: 20
   },
-  placeholderSubtext: {
+  errorText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#404040',
+    marginBottom: 8
+  },
+  errorSubtext: {
     fontSize: 14,
-    color: '#737373',
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
+    color: '#666',
+    textAlign: 'center'
+  }
 });
+
+export default MainNavigator;

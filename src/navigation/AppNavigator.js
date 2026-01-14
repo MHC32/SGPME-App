@@ -1,14 +1,14 @@
 /**
- * SGPME - App Navigator
+ * APP NAVIGATOR (EXEMPLE)
  * 
- * Navigation principale de l'application
- * Switch entre AuthNavigator (login) et MainNavigator (app)
- * selon l'état d'authentification
+ * Navigator racine de l'application
+ * Gère le switch entre Auth et Main
  */
 
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { useDispatch, useSelector } from 'react-redux';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useSelector, useDispatch } from 'react-redux';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 // Navigators
@@ -16,66 +16,61 @@ import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 
 // Redux
-import { checkAuth, selectIsAuthenticated, selectAuthLoading } from '../redux/slices';
+import { checkAuth } from '../redux/slices/authSlice';
 
-// ============================================================================
-// 🧭 APP NAVIGATOR
-// ============================================================================
+const Stack = createNativeStackNavigator();
 
-export default function AppNavigator() {
+const AppNavigator = () => {
   const dispatch = useDispatch();
-  const isAuthenticated = useSelector(selectIsAuthenticated);
-  const loading = useSelector(selectAuthLoading);
+  const { isAuthenticated, loading } = useSelector(state => state.auth);
 
-  console.log('🔵 [AppNavigator] RENDER');
-  console.log('   isAuthenticated:', isAuthenticated);
-  console.log('   loading:', loading);
-
-  // Vérifie si l'utilisateur est déjà connecté au démarrage
-  // IMPORTANT : Ne vérifie qu'UNE SEULE FOIS et seulement si pas déjà authentifié
+  // Check auth on mount
   useEffect(() => {
-    console.log('🟢 [AppNavigator] useEffect TRIGGER');
-    console.log('   isAuthenticated:', isAuthenticated);
-    console.log('   loading:', loading);
-    
-    // Ne check que si on n'est pas déjà authentifié
-    if (!isAuthenticated && !loading) {
-      console.log('✅ [AppNavigator] Calling checkAuth()...');
-      dispatch(checkAuth());
-    } else {
-      console.log('⏭️ [AppNavigator] Skipping checkAuth (already auth or loading)');
-    }
-  }, []); // Dépendances vides = exécute qu'une seule fois au mount
+    dispatch(checkAuth());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Affiche un loading pendant la vérification initiale
+  // Loading state
   if (loading) {
-    console.log('⏳ [AppNavigator] Showing loading screen...');
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#404040" />
       </View>
     );
   }
 
-  console.log('🧭 [AppNavigator] Navigating to:', isAuthenticated ? 'MainNavigator' : 'AuthNavigator');
-
   return (
     <NavigationContainer>
-      {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false
+        }}
+      >
+        {!isAuthenticated ? (
+          // Auth Stack
+          <Stack.Screen
+            name="Auth"
+            component={AuthNavigator}
+          />
+        ) : (
+          // Main Stack (Module-based)
+          <Stack.Screen
+            name="Main"
+            component={MainNavigator}
+          />
+        )}
+      </Stack.Navigator>
     </NavigationContainer>
   );
-}
-
-
-// ============================================================================
-// 🎨 STYLES
-// ============================================================================
+};
 
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-  },
+    backgroundColor: '#f5f5f5'
+  }
 });
+
+export default AppNavigator;

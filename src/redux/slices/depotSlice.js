@@ -6,7 +6,7 @@
  */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { depotService } from '../../services/depot.service';
+import { depotService } from '../../services/depot.services';
 
 // ===========================
 // THUNKS (Actions Async)
@@ -182,6 +182,7 @@ const depotSlice = createSlice({
      * @param {string} payload.conditionnementLabel - Label (Caisse 24×)
      * @param {number} payload.prixUnitaire - Prix du conditionnement
      * @param {number} payload.stockDisponible - Stock disponible
+     * @param {number} payload.quantiteInitiale - Quantité initiale à ajouter (optionnel, défaut: 1)
      */
     addToCart: (state, action) => {
       const {
@@ -194,7 +195,8 @@ const depotSlice = createSlice({
         conditionnementQte,
         conditionnementLabel,
         prixUnitaire,
-        stockDisponible
+        stockDisponible,
+        quantiteInitiale = 1  // ✅ Support quantité initiale
       } = action.payload;
 
       // Vérifier si ce produit + conditionnement existe déjà
@@ -208,12 +210,22 @@ const depotSlice = createSlice({
         // Incrémenter la quantité
         const item = state.cartItems[existingItemIndex];
         
+        // ✅ Ajouter la quantité initiale au lieu de juste +1
+        const newQuantite = item.quantite + quantiteInitiale;
+        
         // Vérifier le stock
-        if (item.quantite < stockDisponible) {
-          item.quantite += 1;
+        if (newQuantite <= stockDisponible) {
+          item.quantite = newQuantite;
+          item.total = item.quantite * item.prixUnitaire;
+        } else {
+          // Stock insuffisant, ajouter seulement ce qui est disponible
+          item.quantite = stockDisponible;
           item.total = item.quantite * item.prixUnitaire;
         }
       } else {
+        // ✅ Valider la quantité initiale
+        const validQuantite = Math.min(quantiteInitiale, stockDisponible);
+        
         // Créer nouvel item
         const newItem = {
           id: `${productId}-${conditionnementType}-${Date.now()}`,
@@ -225,10 +237,10 @@ const depotSlice = createSlice({
           conditionnementType,
           conditionnementQte,
           conditionnementLabel,
-          quantite: 1,
+          quantite: validQuantite,  // ✅ Utiliser quantité validée
           unitLabel: getUnitLabel(conditionnementType),
           prixUnitaire,
-          total: prixUnitaire,
+          total: prixUnitaire * validQuantite,  // ✅ Total calculé sur quantité initiale
           stockDisponible
         };
 
@@ -348,7 +360,16 @@ const depotSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.productsLoading = false;
-        state.products = action.payload;
+        
+        // ✅ FIX: Extraire les results si l'API retourne un objet paginé
+        if (action.payload && Array.isArray(action.payload.results)) {
+          state.products = action.payload.results;
+        } else if (Array.isArray(action.payload)) {
+          state.products = action.payload;
+        } else {
+          console.error('[fetchProducts] Unexpected payload format:', action.payload);
+          state.products = [];
+        }
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.productsLoading = false;
@@ -364,7 +385,16 @@ const depotSlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.categoriesLoading = false;
-        state.categories = action.payload;
+        
+        // ✅ FIX: Extraire les results si l'API retourne un objet paginé
+        if (action.payload && Array.isArray(action.payload.results)) {
+          state.categories = action.payload.results;
+        } else if (Array.isArray(action.payload)) {
+          state.categories = action.payload;
+        } else {
+          console.error('[fetchCategories] Unexpected payload format:', action.payload);
+          state.categories = [];
+        }
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.categoriesLoading = false;
@@ -401,7 +431,16 @@ const depotSlice = createSlice({
       })
       .addCase(fetchVentes.fulfilled, (state, action) => {
         state.ventesLoading = false;
-        state.ventes = action.payload;
+        
+        // ✅ FIX: Extraire les results si l'API retourne un objet paginé
+        if (action.payload && Array.isArray(action.payload.results)) {
+          state.ventes = action.payload.results;
+        } else if (Array.isArray(action.payload)) {
+          state.ventes = action.payload;
+        } else {
+          console.error('[fetchVentes] Unexpected payload format:', action.payload);
+          state.ventes = [];
+        }
       })
       .addCase(fetchVentes.rejected, (state, action) => {
         state.ventesLoading = false;
@@ -448,6 +487,12 @@ function calculateTotals(state) {
  */
 export const selectFilteredProducts = (state) => {
   const { products, selectedCategory, searchQuery } = state.depot;
+  
+  // ✅ FIX: Vérifier que products est bien un array
+  if (!Array.isArray(products)) {
+    console.warn('[selectFilteredProducts] products is not an array:', products);
+    return [];
+  }
   
   let filtered = [...products];
 

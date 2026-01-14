@@ -15,6 +15,7 @@ import authReducer from './slices/authSlice';
 import cartReducer from './slices/cartSlice';
 import venteReducer from './slices/venteSlice';
 import uiReducer from './slices/uiSlice';
+import depotReducer from './slices/depotSlice';
 
 // ============================================================================
 // 📦 CONFIGURATION PERSISTENCE
@@ -36,6 +37,7 @@ const rootReducer = combineReducers({
   cart: cartReducer,
   vente: venteReducer,
   ui: uiReducer,
+  depot: depotReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
