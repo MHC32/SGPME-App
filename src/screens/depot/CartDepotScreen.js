@@ -36,7 +36,7 @@ import EmptyState from '../../components/themed/ThemedEmptyState';
 
 const CartDepotScreen = ({ navigation }) => {
   const dispatch = useDispatch();
-  const { theme } = useTheme();
+  const theme = useTheme(); // ⬅️ FIX: Pas de destructuring, retourne directement le thème
 
   // Redux state
   const cartItems = useSelector(selectCartItems);
@@ -141,15 +141,15 @@ const CartDepotScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors?.primary || '#f5f5f5' }]}>
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: theme.border }]}>
+      <View style={[styles.header, { borderBottomColor: theme.colors?.border || '#e0e0e0' }]}>
         <TouchableOpacity 
           style={styles.backBtn}
           onPress={handleGoBack}
           activeOpacity={0.7}
         >
-          <Text style={[styles.backText, { color: theme.primary }]}>
+          <Text style={[styles.backText, { color: theme.colors?.primary || '#404040' }]}>
             ← Panier
           </Text>
         </TouchableOpacity>
@@ -168,7 +168,7 @@ const CartDepotScreen = ({ navigation }) => {
       {/* Items count badge */}
       {!isEmpty && (
         <View style={styles.badgeContainer}>
-          <View style={[styles.badge, { backgroundColor: theme.primary }]}>
+          <View style={[styles.badge, { backgroundColor: theme.colors?.primary || '#404040' }]}>
             <Text style={styles.badgeText}>
               {itemsCount} article{itemsCount > 1 ? 's' : ''}
             </Text>
@@ -188,50 +188,50 @@ const CartDepotScreen = ({ navigation }) => {
 
       {/* Summary (only if cart not empty) */}
       {!isEmpty && (
-        <View style={[styles.summaryContainer, { borderTopColor: theme.border }]}>
+        <View style={[styles.summaryContainer, { borderTopColor: theme.colors?.border || '#e0e0e0' }]}>
           {/* Total units info */}
           <View style={styles.unitsRow}>
-            <Text style={[styles.unitsText, { color: theme.textSecondary }]}>
+            <Text style={[styles.unitsText, { color: theme.colors?.textSecondary || '#666' }]}>
               {itemsCount} article{itemsCount > 1 ? 's' : ''} ({totalUnits} unités totales)
             </Text>
           </View>
 
           {/* Subtotal */}
           <View style={styles.row}>
-            <Text style={[styles.label, { color: theme.textSecondary }]}>
+            <Text style={[styles.label, { color: theme.colors?.textSecondary || '#666' }]}>
               Sous-total
             </Text>
-            <Text style={[styles.amount, { color: theme.textPrimary }]}>
+            <Text style={[styles.amount, { color: theme.colors?.textPrimary || '#404040' }]}>
               {totals.sousTotal.toFixed(2)} HTG
             </Text>
           </View>
 
           {/* Discount */}
           <View style={styles.row}>
-            <Text style={[styles.label, { color: theme.textSecondary }]}>
+            <Text style={[styles.label, { color: theme.colors?.textSecondary || '#666' }]}>
               Remise ({totals.remisePourcent.toFixed(0)}%)
             </Text>
-            <Text style={[styles.amount, { color: theme.textPrimary }]}>
+            <Text style={[styles.amount, { color: theme.colors?.textPrimary || '#404040' }]}>
               {totals.remise.toFixed(2)} HTG
             </Text>
           </View>
 
           {/* Divider */}
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <View style={[styles.divider, { backgroundColor: theme.colors?.border || '#e0e0e0' }]} />
 
           {/* Total */}
           <View style={styles.totalRow}>
-            <Text style={[styles.totalLabel, { color: theme.textPrimary }]}>
+            <Text style={[styles.totalLabel, { color: theme.colors?.textPrimary || '#404040' }]}>
               TOTAL
             </Text>
-            <Text style={[styles.totalAmount, { color: theme.primary }]}>
+            <Text style={[styles.totalAmount, { color: theme.colors?.primary || '#404040' }]}>
               {totals.total.toFixed(2)} HTG
             </Text>
           </View>
 
           {/* Checkout Button */}
           <TouchableOpacity
-            style={[styles.checkoutBtn, { backgroundColor: theme.primary }]}
+            style={[styles.checkoutBtn, { backgroundColor: theme.colors?.primary || '#404040' }]}
             onPress={handleCheckout}
             activeOpacity={0.8}
           >
@@ -260,7 +260,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 15,
     borderBottomWidth: 2,
-    borderBottomColor: '#e0e0e0',
     backgroundColor: '#FFF'
   },
   backBtn: {
@@ -268,8 +267,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#404040'
+    fontWeight: '700'
   },
   clearBtn: {
     paddingVertical: 5,
@@ -288,8 +286,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#404040'
+    borderRadius: 20
   },
   badgeText: {
     color: '#FFF',
@@ -304,7 +301,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     padding: 20,
     borderTopWidth: 2,
-    borderTopColor: '#e0e0e0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
@@ -320,7 +316,6 @@ const styles = StyleSheet.create({
   unitsText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
     textAlign: 'center'
   },
   row: {
@@ -330,17 +325,14 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   label: {
-    fontSize: 15,
-    color: '#666'
+    fontSize: 15
   },
   amount: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#404040'
+    fontWeight: '600'
   },
   divider: {
     height: 2,
-    backgroundColor: '#e0e0e0',
     marginVertical: 12
   },
   totalRow: {
@@ -351,20 +343,17 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#404040'
+    fontWeight: '700'
   },
   totalAmount: {
     fontSize: 22,
-    fontWeight: '800',
-    color: '#404040'
+    fontWeight: '800'
   },
   checkoutBtn: {
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#404040'
+    justifyContent: 'center'
   },
   checkoutBtnText: {
     color: '#FFF',

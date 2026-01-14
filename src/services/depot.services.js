@@ -134,28 +134,39 @@ export const depotService = {
    * @returns {Promise<Object>} Vente créée
    */
   createVente: async (venteData) => {
-    try {
-      // Préparer les données selon le format API
-      const payload = {
-        lignes: venteData.lignes.map(ligne => ({
-          produit: ligne.produit,
-          quantite: ligne.quantite,
-          prix_unitaire: ligne.prix_unitaire,
-          // Optionnel: ajouter conditionnement si backend le supporte
-          conditionnement: ligne.conditionnement
-        })),
-        mode_paiement: venteData.mode_paiement || 'especes',
-        montant_recu: venteData.montant_recu,
-        notes: venteData.notes || ''
-      };
+  try {
+    console.log('[depotService] createVente called with:', venteData);
+    
+    // Préparer les données selon le format API
+    const payload = {
+      lignes: venteData.lignes.map(ligne => ({
+        produit: ligne.produit || ligne.produit_id, // ID du produit
+        quantite: Number(ligne.quantite), // Nombre de conditionnements
+        conditionnement: ligne.conditionnement_type || 'unite',
+        quantite_par_conditionnement: Number(ligne.conditionnement_qte || 1),
+        prix_unitaire: Number(ligne.prix_unitaire) // Prix par conditionnement
+      })),
+      methode_paiement: venteData.mode_paiement || 'especes',
+      montant_recu: Number(venteData.montant_recu),
+      remise: Number(venteData.remise || 0),
+      client: venteData.client_id || null,
+      notes: venteData.notes || ''
+    };
 
-      const response = await api.post(API_CONFIG.ENDPOINTS.VENTES, payload);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating vente:', error);
-      throw error;
-    }
-  },
+    console.log('[depotService] Sending payload:', JSON.stringify(payload, null, 2));
+    
+    const response = await api.post(API_CONFIG.ENDPOINTS.VENTES, payload);
+    console.log('[depotService] Vente created:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('[depotService] Error creating vente:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    throw error;
+  }
+},
 
   /**
    * Récupérer la liste des ventes

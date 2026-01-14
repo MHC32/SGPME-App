@@ -564,12 +564,18 @@ export const selectCartItems = (state) => state.depot.cartItems;
 /**
  * Sélectionner les totaux
  */
-export const selectCartTotals = (state) => ({
-  sousTotal: state.depot.sousTotal,
-  remise: state.depot.remise,
-  remisePourcent: state.depot.remisePourcent,
-  total: state.depot.total
-});
+export const selectCartTotals = createSelector(
+  (state) => state.depot,
+  (depotState) => {
+    const { sousTotal, remise, remisePourcent, total } = depotState;
+    return {
+      sousTotal: sousTotal || 0,
+      remise: remise || 0,
+      remisePourcent: remisePourcent || 0,
+      total: total || 0
+    };
+  }
+);
 
 /**
  * Sélectionner les produits

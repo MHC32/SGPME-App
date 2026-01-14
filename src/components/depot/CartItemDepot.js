@@ -14,7 +14,6 @@ import {
   Image,
   Alert
 } from 'react-native';
-import { useTheme } from '../../theme/ThemeProvider';
 
 const CartItemDepot = ({
   item,
@@ -22,73 +21,86 @@ const CartItemDepot = ({
   onRemove,
   style
 }) => {
-  const { theme } = useTheme();
+  // ✅ FIX: Données avec valeurs par défaut
+  const {
+    id,
+    productName = '',
+    productCode = '',
+    productImage,
+    emoji = '📦',
+    conditionnementLabel = '',
+    quantite = 0,
+    unitLabel = 'unités',
+    prixUnitaire = 0, // ✅ Valeur par défaut
+    total = 0,
+    stockDisponible = 0
+  } = item || {};
 
   const handleDecrease = () => {
-    if (item.quantite === 1) {
+    if (quantite === 1) {
       // Confirm removal
       Alert.alert(
         'Retirer du panier',
-        `Retirer ${item.productName} du panier ?`,
+        `Retirer ${productName} du panier ?`,
         [
           { text: 'Annuler', style: 'cancel' },
           { 
             text: 'Retirer', 
             style: 'destructive',
-            onPress: () => onRemove(item.id) 
+            onPress: () => onRemove(id) 
           }
         ]
       );
     } else {
-      onUpdateQuantity(item.id, -1);
+      onUpdateQuantity(id, -1);
     }
   };
 
   const handleIncrease = () => {
     // Check stock
-    if (item.quantite >= item.stockDisponible) {
+    if (quantite >= stockDisponible) {
       Alert.alert(
         'Stock insuffisant',
-        `Stock disponible : ${item.stockDisponible} ${item.unitLabel}`,
+        `Stock disponible : ${stockDisponible} ${unitLabel}`,
         [{ text: 'OK' }]
       );
       return;
     }
-    onUpdateQuantity(item.id, 1);
+    onUpdateQuantity(id, 1);
   };
 
   const handleRemove = () => {
     Alert.alert(
       'Retirer du panier',
-      `Retirer ${item.productName} du panier ?`,
+      `Retirer ${productName} du panier ?`,
       [
         { text: 'Annuler', style: 'cancel' },
         { 
           text: 'Retirer', 
           style: 'destructive',
-          onPress: () => onRemove(item.id) 
+          onPress: () => onRemove(id) 
         }
       ]
     );
   };
 
   // Stock restant après cet item
-  const stockRestant = item.stockDisponible - item.quantite;
+  const stockRestant = stockDisponible - quantite;
   const isLowStock = stockRestant <= 5;
 
   return (
-    <View style={[styles.container, { borderColor: theme.border }, style]}>
+    <View style={[styles.container, style]}>
       <View style={styles.content}>
         {/* Product Image/Emoji */}
-        <View style={[styles.imageContainer, { backgroundColor: theme.cardBg }]}>
-          {item.productImage ? (
+        <View style={styles.imageContainer}>
+          {productImage ? (
             <Image 
-              source={{ uri: item.productImage }} 
+              source={{ uri: productImage }} 
               style={styles.image}
               resizeMode="cover"
             />
           ) : (
-            <Text style={styles.emoji}>{item.emoji || '📦'}</Text>
+            <Text style={styles.emoji}>{emoji}</Text>
           )}
         </View>
 
@@ -96,45 +108,45 @@ const CartItemDepot = ({
         <View style={styles.info}>
           {/* Product Name */}
           <Text 
-            style={[styles.name, { color: theme.textPrimary }]}
+            style={styles.name}
             numberOfLines={1}
           >
-            {item.productName}
+            {productName}
           </Text>
 
           {/* Code & Conditionnement */}
           <View style={styles.metaRow}>
-            <Text style={[styles.code, { color: theme.textSecondary }]}>
-              {item.productCode}
+            <Text style={styles.code}>
+              {productCode}
             </Text>
             <Text style={styles.separator}>•</Text>
-            <Text style={[styles.conditionnement, { color: theme.primary }]}>
-              {item.conditionnementLabel}
+            <Text style={styles.conditionnement}>
+              {conditionnementLabel}
             </Text>
           </View>
 
           {/* Quantity Controls */}
           <View style={styles.quantityRow}>
             <TouchableOpacity
-              style={[styles.qtyBtn, { borderColor: theme.border }]}
+              style={styles.qtyBtn}
               onPress={handleDecrease}
               activeOpacity={0.7}
             >
-              <Text style={[styles.qtyBtnText, { color: theme.textPrimary }]}>
+              <Text style={styles.qtyBtnText}>
                 −
               </Text>
             </TouchableOpacity>
 
-            <Text style={[styles.quantity, { color: theme.textPrimary }]}>
-              {item.quantite} {item.unitLabel}
+            <Text style={styles.quantity}>
+              {quantite} {unitLabel}
             </Text>
 
             <TouchableOpacity
-              style={[styles.qtyBtn, { borderColor: theme.border }]}
+              style={styles.qtyBtn}
               onPress={handleIncrease}
               activeOpacity={0.7}
             >
-              <Text style={[styles.qtyBtnText, { color: theme.textPrimary }]}>
+              <Text style={styles.qtyBtnText}>
                 +
               </Text>
             </TouchableOpacity>
@@ -142,11 +154,11 @@ const CartItemDepot = ({
 
           {/* Price Row */}
           <View style={styles.priceRow}>
-            <Text style={[styles.priceCalc, { color: theme.textSecondary }]}>
-              {item.prixUnitaire.toFixed(2)} HTG × {item.quantite}
+            <Text style={styles.priceCalc}>
+              {Number(prixUnitaire).toFixed(2)} HTG × {quantite}
             </Text>
-            <Text style={[styles.total, { color: theme.primary }]}>
-              {item.total.toFixed(2)} HTG
+            <Text style={styles.total}>
+              {Number(total).toFixed(2)} HTG
             </Text>
           </View>
 
@@ -157,7 +169,7 @@ const CartItemDepot = ({
               { color: isLowStock ? '#FF9800' : '#4CAF50' }
             ]}
           >
-            Stock restant: {stockRestant} {item.unitLabel}
+            Stock restant: {stockRestant} {unitLabel}
           </Text>
         </View>
 
