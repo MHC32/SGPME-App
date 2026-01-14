@@ -5,7 +5,7 @@
  * avec support des conditionnements multiples
  */
 
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import { depotService } from '../../services/depot.services';
 
 // ===========================
@@ -168,88 +168,96 @@ const depotSlice = createSlice({
     // PANIER
     // ===========================
 
-    /**
-     * Ajouter un conditionnement au panier
-     * 
-     * @param {Object} payload
-     * @param {number} payload.productId
-     * @param {string} payload.productName
-     * @param {string} payload.productCode
-     * @param {string} payload.productImage
-     * @param {string} payload.emoji
-     * @param {string} payload.conditionnementType - Type (unite, caisse, sac)
-     * @param {number} payload.conditionnementQte - Quantité dans conditionnement
-     * @param {string} payload.conditionnementLabel - Label (Caisse 24×)
-     * @param {number} payload.prixUnitaire - Prix du conditionnement
-     * @param {number} payload.stockDisponible - Stock disponible
-     * @param {number} payload.quantiteInitiale - Quantité initiale à ajouter (optionnel, défaut: 1)
-     */
-    addToCart: (state, action) => {
-      const {
-        productId,
-        productName,
-        productCode,
-        productImage,
-        emoji,
-        conditionnementType,
-        conditionnementQte,
-        conditionnementLabel,
-        prixUnitaire,
-        stockDisponible,
-        quantiteInitiale = 1  // ✅ Support quantité initiale
-      } = action.payload;
+    // ===========================
+// PANIER
+// ===========================
 
-      // Vérifier si ce produit + conditionnement existe déjà
-      const existingItemIndex = state.cartItems.findIndex(
-        item => 
-          item.productId === productId && 
-          item.conditionnementType === conditionnementType
-      );
+/**
+ * Ajouter un conditionnement au panier
+ * 
+ * @param {Object} payload
+ * @param {number} payload.productId
+ * @param {string} payload.productName
+ * @param {string} payload.productCode
+ * @param {string} payload.productImage
+ * @param {string} payload.emoji
+ * @param {string} payload.conditionnementType - Type (unite, caisse, sac)
+ * @param {number} payload.conditionnementQte - Quantité dans conditionnement
+ * @param {string} payload.conditionnementLabel - Label (Caisse 24×)
+ * @param {number} payload.prixUnitaire - Prix du conditionnement
+ * @param {number} payload.stockDisponible - Stock disponible
+ * @param {number} payload.quantiteInitiale - Quantité initiale à ajouter (optionnel, défaut: 1)
+ */
+addToCart: (state, action) => {
+  const {
+    productId,
+    productName,
+    productCode,
+    productImage,
+    emoji,
+    conditionnementType,
+    conditionnementQte = 1, // ✅ Valeur par défaut
+    conditionnementLabel = 'Unité',
+    prixUnitaire = 0, // ✅ Valeur par défaut
+    stockDisponible = 0,
+    quantiteInitiale = 1  // ✅ Support quantité initiale
+  } = action.payload;
 
-      if (existingItemIndex >= 0) {
-        // Incrémenter la quantité
-        const item = state.cartItems[existingItemIndex];
-        
-        // ✅ Ajouter la quantité initiale au lieu de juste +1
-        const newQuantite = item.quantite + quantiteInitiale;
-        
-        // Vérifier le stock
-        if (newQuantite <= stockDisponible) {
-          item.quantite = newQuantite;
-          item.total = item.quantite * item.prixUnitaire;
-        } else {
-          // Stock insuffisant, ajouter seulement ce qui est disponible
-          item.quantite = stockDisponible;
-          item.total = item.quantite * item.prixUnitaire;
-        }
-      } else {
-        // ✅ Valider la quantité initiale
-        const validQuantite = Math.min(quantiteInitiale, stockDisponible);
-        
-        // Créer nouvel item
-        const newItem = {
-          id: `${productId}-${conditionnementType}-${Date.now()}`,
-          productId,
-          productName,
-          productCode,
-          productImage,
-          emoji,
-          conditionnementType,
-          conditionnementQte,
-          conditionnementLabel,
-          quantite: validQuantite,  // ✅ Utiliser quantité validée
-          unitLabel: getUnitLabel(conditionnementType),
-          prixUnitaire,
-          total: prixUnitaire * validQuantite,  // ✅ Total calculé sur quantité initiale
-          stockDisponible
-        };
+  // ✅ Validation des données
+  const validPrixUnitaire = prixUnitaire || 0;
+  const validStockDisponible = stockDisponible || 0;
 
-        state.cartItems.push(newItem);
-      }
+  // Vérifier si ce produit + conditionnement existe déjà
+  const existingItemIndex = state.cartItems.findIndex(
+    item => 
+      item.productId === productId && 
+      item.conditionnementType === conditionnementType
+  );
 
-      // Recalculer les totaux
-      calculateTotals(state);
-    },
+  if (existingItemIndex >= 0) {
+    // Incrémenter la quantité
+    const item = state.cartItems[existingItemIndex];
+    
+    // ✅ Ajouter la quantité initiale au lieu de juste +1
+    const newQuantite = item.quantite + quantiteInitiale;
+    
+    // Vérifier le stock
+    if (newQuantite <= validStockDisponible) {
+      item.quantite = newQuantite;
+      item.total = item.quantite * item.prixUnitaire;
+    } else {
+      // Stock insuffisant, ajouter seulement ce qui est disponible
+      item.quantite = validStockDisponible;
+      item.total = item.quantite * item.prixUnitaire;
+    }
+  } else {
+    // ✅ Valider la quantité initiale
+    const validQuantite = Math.min(quantiteInitiale, validStockDisponible);
+    
+    // Créer nouvel item
+    const newItem = {
+      id: `${productId}-${conditionnementType}-${Date.now()}`,
+      productId,
+      productName,
+      productCode,
+      productImage,
+      emoji,
+      conditionnementType,
+      conditionnementQte,
+      conditionnementLabel,
+      quantite: validQuantite,  // ✅ Utiliser quantité validée
+      unitLabel: getUnitLabel(conditionnementType),
+      prixUnitaire: validPrixUnitaire,
+      total: validPrixUnitaire * validQuantite,  // ✅ Total calculé sur quantité initiale
+      stockDisponible: validStockDisponible
+    };
+
+    state.cartItems.push(newItem);
+  }
+
+  // Recalculer les totaux
+  calculateTotals(state);
+},
 
     /**
      * Mettre à jour la quantité d'un item
@@ -483,39 +491,49 @@ function calculateTotals(state) {
 // ===========================
 
 /**
- * Sélectionner les produits filtrés
+ * Base selectors
  */
-export const selectFilteredProducts = (state) => {
-  const { products, selectedCategory, searchQuery } = state.depot;
-  
-  // ✅ FIX: Vérifier que products est bien un array
-  if (!Array.isArray(products)) {
-    console.warn('[selectFilteredProducts] products is not an array:', products);
-    return [];
-  }
-  
-  let filtered = [...products];
+const selectDepotProducts = (state) => state.depot.products;
+const selectDepotSelectedCategory = (state) => state.depot.selectedCategory;
+const selectDepotSearchQuery = (state) => state.depot.searchQuery;
 
-  // Filtrer par catégorie
-  if (selectedCategory) {
-    filtered = filtered.filter(
-      product => product.categorie === selectedCategory || 
-                 product.categorie_nom === selectedCategory
-    );
-  }
+/**
+ * Sélectionner les produits filtrés (avec memoization)
+ * 
+ * ✅ FIX: Utiliser createSelector pour éviter les rerenders inutiles
+ */
+export const selectFilteredProducts = createSelector(
+  [selectDepotProducts, selectDepotSelectedCategory, selectDepotSearchQuery],
+  (products, selectedCategory, searchQuery) => {
+    // Vérifier que products est bien un array
+    if (!Array.isArray(products)) {
+      console.warn('[selectFilteredProducts] products is not an array:', products);
+      return [];
+    }
+    
+    let filtered = [...products];
 
-  // Filtrer par recherche
-  if (searchQuery.trim()) {
-    const query = searchQuery.toLowerCase();
-    filtered = filtered.filter(
-      product => 
-        product.nom?.toLowerCase().includes(query) ||
-        product.code?.toLowerCase().includes(query)
-    );
-  }
+    // Filtrer par catégorie
+    if (selectedCategory) {
+      filtered = filtered.filter(
+        product => product.categorie === selectedCategory || 
+                   product.categorie_nom === selectedCategory
+      );
+    }
 
-  return filtered;
-};
+    // Filtrer par recherche
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        product => 
+          product.nom?.toLowerCase().includes(query) ||
+          product.code?.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }
+);
 
 /**
  * Sélectionner le nombre total d'items dans le panier

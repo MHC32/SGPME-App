@@ -1,153 +1,443 @@
 /**
- * CONDITIONNEMENT CARD
+ * CONDITIONNEMENT CARD WITH QUANTITY SELECTOR
  * 
- * Card pour afficher un conditionnement d'un produit
- * avec prix et bouton d'ajout au panier
+ * Card pour un conditionnement avec sélecteur de quantité
+ * Permet de choisir la quantité avant d'ajouter au panier
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  ActivityIndicator
+  TouchableOpacity,
+  Alert,
+  TextInput
 } from 'react-native';
 import { useTheme } from '../../theme/ThemeProvider';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { formatPrice } from '../../utils/depot/conditionnementHelpers';
 
-const ConditionnementCard = ({
-  icon = '📦',
-  label,
-  price,
-  stock,
-  onPress,
-  disabled = false,
-  loading = false,
-  style
+/**
+ * ConditionnementCard Component
+ * 
+ * @param {object} props
+ * @param {object} props.product - Produit complet
+ * @param {object} props.conditionnement - Conditionnement avec type, qte, prix, stock, label, emoji
+ * @param {function} props.onAddToCart - Callback(product, conditionnement)
+ */
+export const ConditionnementCard = ({
+  product,
+  conditionnement,
+  onAddToCart
 }) => {
-  const { theme } = useTheme();
+  const theme = useTheme();
+  const [quantite, setQuantite] = useState(1);
 
-  const isDisabled = disabled || stock === 0 || loading;
+  // ✅ FIX: Données du conditionnement avec valeurs par défaut
+  const {
+    type = 'unite',
+    qte: qteParConditionnement = 1,
+    prix = 0, // ✅ Valeur par défaut
+    stock = 0,
+    label = 'Unité',
+    emoji = '📦'
+  } = conditionnement || {};
+
+  // Calculs
+  const total = prix * quantite;
+  const isDisabled = stock === 0;
+  const isLowStock = stock > 0 && stock <= 10;
+
+  // Handlers
+  const handleDecrement = () => {
+    if (quantite > 1) {
+      setQuantite(quantite - 1);
+    }
+  };
+
+  const handleIncrement = () => {
+    if (quantite < stock) {
+      setQuantite(quantite + 1);
+    } else {
+      Alert.alert(
+        'Stock insuffisant',
+        `Stock disponible: ${stock} ${getUnitLabel(type)}`
+      );
+    }
+  };
+
+  const handleQuantityChange = (text) => {
+    // Permettre seulement les nombres
+    const numericValue = text.replace(/[^0-9]/g, '');
+    
+    if (numericValue === '') {
+      setQuantite(1);
+      return;
+    }
+
+    const newQuantite = parseInt(numericValue, 10);
+
+    if (newQuantite <= 0) {
+      setQuantite(1);
+    } else if (newQuantite > stock) {
+      Alert.alert(
+        'Stock insuffisant',
+        `Stock disponible: ${stock} ${getUnitLabel(type)}`
+      );
+      setQuantite(stock);
+    } else {
+      setQuantite(newQuantite);
+    }
+  };
+
+  const handleAddToCart = () => {
+    if (isDisabled) {
+      Alert.alert('Stock épuisé', `Ce conditionnement n'est plus disponible.`);
+      return;
+    }
+
+    // ✅ FIX: Créer un objet conditionnement avec données validées
+    const validatedConditionnement = {
+      ...conditionnement,
+      type: type,
+      qte: qteParConditionnement,
+      prix: prix || 0, // ✅ Garantir un prix
+      stock: stock,
+      label: label,
+      emoji: emoji,
+      quantiteInitiale: quantite
+    };
+
+    // Appeler le callback avec la quantité sélectionnée
+    onAddToCart(product, validatedConditionnement);
+
+    // Reset à 1 après ajout
+    setQuantite(1);
+  };
 
   return (
-    <View style={[styles.card, { borderColor: theme.border }, style]}>
-      {/* Icon */}
-      <Text style={styles.icon}>{icon}</Text>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.colors.card,
+          borderColor: theme.colors.border,
+          borderRadius: theme.borderRadius.sm
+        },
+        isDisabled && styles.disabled
+      ]}
+    >
+      {/* Header: Icon + Label */}
+      <View style={styles.header}>
+        <Text style={styles.emoji}>{emoji}</Text>
+        <Text
+          style={[
+            styles.label,
+            { color: theme.colors.text },
+            isDisabled && styles.disabledText
+          ]}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+      </View>
 
-      {/* Label */}
-      <Text 
-        style={[styles.label, { color: theme.textPrimary }]}
-        numberOfLines={1}
+      {/* Prix */}
+      <Text
+        style={[
+          styles.price,
+          { color: theme.colors.primary },
+          isDisabled && styles.disabledText
+        ]}
       >
-        {label}
+        {formatPrice(prix, 'HTG')}
       </Text>
 
-      {/* Price */}
-      <Text style={[styles.price, { color: theme.primary }]}>
-        {price.toFixed(2)} HTG
-      </Text>
+      {/* Stock */}
+      <View style={styles.stockRow}>
+        <Icon
+          name={isDisabled ? 'close-circle' : isLowStock ? 'alert-circle' : 'check-circle'}
+          size={14}
+          color={isDisabled ? '#f44336' : isLowStock ? '#FF9800' : '#4CAF50'}
+        />
+        <Text
+          style={[
+            styles.stockText,
+            {
+              color: isDisabled ? '#f44336' : isLowStock ? '#FF9800' : '#4CAF50'
+            }
+          ]}
+        >
+          {stock} {getUnitLabel(type)}
+        </Text>
+      </View>
 
-      {/* Stock indicator (optional) */}
-      {stock !== undefined && stock <= 10 && stock > 0 && (
-        <Text style={styles.lowStock}>Stock: {stock}</Text>
-      )}
+      {/* Divider */}
+      <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
-      {/* Add Button */}
+      {/* Quantity Selector */}
+      <View style={styles.quantitySection}>
+        <Text style={[styles.quantityLabel, { color: theme.colors.textSecondary }]}>
+          Quantité:
+        </Text>
+
+        <View style={styles.quantityControls}>
+          {/* Minus Button */}
+          <TouchableOpacity
+            style={[
+              styles.quantityButton,
+              {
+                backgroundColor: theme.colors.card,
+                borderColor: theme.colors.border
+              },
+              (quantite <= 1 || isDisabled) && styles.quantityButtonDisabled
+            ]}
+            onPress={handleDecrement}
+            disabled={quantite <= 1 || isDisabled}
+          >
+            <Icon
+              name="minus"
+              size={18}
+              color={quantite <= 1 || isDisabled ? '#ccc' : theme.colors.text}
+            />
+          </TouchableOpacity>
+
+          {/* Quantity Input */}
+          <TextInput
+            style={[
+              styles.quantityInput,
+              {
+                borderColor: theme.colors.border,
+                color: theme.colors.text
+              }
+            ]}
+            value={quantite.toString()}
+            onChangeText={handleQuantityChange}
+            keyboardType="number-pad"
+            maxLength={4}
+            editable={!isDisabled}
+          />
+
+          {/* Plus Button */}
+          <TouchableOpacity
+            style={[
+              styles.quantityButton,
+              {
+                backgroundColor: theme.colors.card,
+                borderColor: theme.colors.border
+              },
+              (quantite >= stock || isDisabled) && styles.quantityButtonDisabled
+            ]}
+            onPress={handleIncrement}
+            disabled={quantite >= stock || isDisabled}
+          >
+            <Icon
+              name="plus"
+              size={18}
+              color={quantite >= stock || isDisabled ? '#ccc' : theme.colors.text}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Total */}
+      <View style={styles.totalRow}>
+        <Text style={[styles.totalLabel, { color: theme.colors.textSecondary }]}>
+          Total:
+        </Text>
+        <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>
+          {formatPrice(total, 'HTG')}
+        </Text>
+      </View>
+
+      {/* Add to Cart Button */}
       <TouchableOpacity
         style={[
-          styles.addBtn,
-          { backgroundColor: theme.primary },
-          isDisabled && styles.addBtnDisabled
+          styles.addButton,
+          {
+            backgroundColor: isDisabled ? '#ccc' : theme.colors.primary,
+            borderRadius: theme.borderRadius.sm
+          }
         ]}
-        onPress={onPress}
+        onPress={handleAddToCart}
         disabled={isDisabled}
         activeOpacity={0.7}
       >
-        {loading ? (
-          <ActivityIndicator size="small" color="#FFF" />
-        ) : (
-          <Text style={styles.addBtnText}>
-            {stock === 0 ? '✕' : '+'}
-          </Text>
-        )}
+        <Icon name="cart-plus" size={18} color="#FFF" />
+        <Text style={styles.addButtonText}>
+          {isDisabled ? 'Stock épuisé' : 'Ajouter au panier'}
+        </Text>
       </TouchableOpacity>
 
-      {/* Out of stock overlay */}
-      {stock === 0 && (
-        <View style={styles.outOfStockOverlay}>
-          <Text style={styles.outOfStockText}>Épuisé</Text>
+      {/* Épuisé Overlay */}
+      {isDisabled && (
+        <View style={styles.epuiseOverlay}>
+          <Icon name="close-circle" size={32} color="#FFF" />
+          <Text style={styles.epuiseText}>Épuisé</Text>
         </View>
       )}
     </View>
   );
 };
 
+/**
+ * Helper: Get unit label
+ */
+const getUnitLabel = (type) => {
+  const labels = {
+    unite: 'unités',
+    caisse: 'caisses',
+    carton: 'cartons',
+    sac: 'sacs',
+    palette: 'palettes',
+    bouteille: 'bouteilles',
+    boite: 'boîtes',
+    pack: 'packs'
+  };
+  return labels[type] || 'unités';
+};
+
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 2,
+  container: {
+    width: '48%',
+    backgroundColor: '#FFF',
+    borderWidth: 1,
     borderColor: '#e0e0e0',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: 140,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
     position: 'relative'
   },
-  icon: {
-    fontSize: 22,
-    marginBottom: 4
+  disabled: {
+    opacity: 0.6
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8
+  },
+  emoji: {
+    fontSize: 20,
+    marginRight: 6
   },
   label: {
-    fontSize: 12,
+    flex: 1,
+    fontSize: 13,
     fontWeight: '700',
-    marginBottom: 2,
-    textAlign: 'center',
     color: '#404040'
   },
   price: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
-    marginBottom: 6,
-    color: '#404040'
+    color: '#404040',
+    marginBottom: 6
   },
-  lowStock: {
-    fontSize: 10,
-    color: '#FF9800',
+  stockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  stockText: {
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 4
+    marginLeft: 4
   },
-  addBtn: {
-    width: '100%',
-    paddingVertical: 6,
-    borderRadius: 8,
+  divider: {
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    marginVertical: 10
+  },
+  quantitySection: {
+    marginBottom: 10
+  },
+  quantityLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 6
+  },
+  quantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  quantityButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 32
+    backgroundColor: '#FFF'
   },
-  addBtnDisabled: {
-    opacity: 0.5
+  quantityButtonDisabled: {
+    opacity: 0.4
   },
-  addBtnText: {
-    color: '#FFF',
+  quantityInput: {
+    flex: 1,
+    height: 32,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 6,
+    marginHorizontal: 6,
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#404040',
+    backgroundColor: '#f9f9f9'
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingTop: 6
+  },
+  totalLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666'
+  },
+  totalAmount: {
     fontSize: 16,
+    fontWeight: '700',
+    color: '#404040'
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#404040',
+    borderRadius: 6,
+    paddingVertical: 10,
+    gap: 6
+  },
+  addButtonText: {
+    color: '#FFF',
+    fontSize: 13,
     fontWeight: '700'
   },
-  outOfStockOverlay: {
+  disabledText: {
+    opacity: 0.5
+  },
+  epuiseOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center'
   },
-  outOfStockText: {
-    color: '#f44336',
-    fontSize: 13,
-    fontWeight: '700'
+  epuiseText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 6
   }
 });
 

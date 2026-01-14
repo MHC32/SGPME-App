@@ -77,13 +77,13 @@ export const getConditionnementEmoji = (type) => {
  */
 export const transformPrixVenteOptions = (options = []) => {
   return options.map(option => ({
-    type: option.type,
-    qte: option.qte,
-    prix: option.prix,
-    stock: option.stock,
-    label: getConditionnementLabel(option.type, option.qte),
-    emoji: getConditionnementEmoji(option.type),
-    unitLabel: getUnitLabel(option.type, 2) // Pluriel par défaut
+    type: option.type || 'unite',
+    qte: option.qte || 1,
+    prix: option.prix || 0, // ✅ Valeur par défaut
+    stock: option.stock || 0,
+    label: getConditionnementLabel(option.type || 'unite', option.qte || 1),
+    emoji: getConditionnementEmoji(option.type || 'unite'),
+    unitLabel: getUnitLabel(option.type || 'unite', 2) // Pluriel par défaut
   }));
 };
 
@@ -128,12 +128,18 @@ export const isStockSuffisant = (stockDisponible, quantiteConditionnement, quant
 /**
  * Formater le prix avec la devise
  * 
- * @param {number} prix - Prix
+ * @param {number|string} prix - Prix
  * @param {string} devise - Devise (HTG par défaut)
  * @returns {string} Prix formaté
  */
 export const formatPrice = (prix, devise = 'HTG') => {
-  return `${prix.toFixed(2)} ${devise}`;
+  // ✅ FIX: Vérifier si prix est valide
+  if (prix === undefined || prix === null || isNaN(Number(prix))) {
+    return `0.00 ${devise}`;
+  }
+  
+  const prixNum = Number(prix);
+  return `${prixNum.toFixed(2)} ${devise}`;
 };
 
 /**
@@ -187,7 +193,7 @@ export const getStockBadge = (stockActuel, stockMinimum = 10) => {
  * @returns {Array} Conditionnements triés
  */
 export const sortConditionnementsByPrice = (options) => {
-  return [...options].sort((a, b) => a.prix - b.prix);
+  return [...options].sort((a, b) => (a.prix || 0) - (b.prix || 0));
 };
 
 /**
@@ -197,7 +203,7 @@ export const sortConditionnementsByPrice = (options) => {
  * @returns {Array} Conditionnements triés
  */
 export const sortConditionnementsByQuantity = (options) => {
-  return [...options].sort((a, b) => a.qte - b.qte);
+  return [...options].sort((a, b) => (a.qte || 0) - (b.qte || 0));
 };
 
 /**
@@ -207,7 +213,7 @@ export const sortConditionnementsByQuantity = (options) => {
  * @returns {Array} Conditionnements avec stock > 0
  */
 export const filterInStockConditionnements = (options) => {
-  return options.filter(opt => opt.stock > 0);
+  return options.filter(opt => (opt.stock || 0) > 0);
 };
 
 /**
